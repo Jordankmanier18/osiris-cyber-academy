@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Profile {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  fullName  String?
+  role      UserRole @default(STUDENT)
+  xp        Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  progress    UserProgress[]
+  submissions Submission[]
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  level       String   @default("Beginner")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  modules Module[]
+}
+
+model Module {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  order       Int      @default(0)
+  courseId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
+}
+
+model Lesson {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  order     Int      @default(0)
+  moduleId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  module   Module         @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progress UserProgress[]
+}
+
+model Mission {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  difficulty  String   @default("Beginner")
+  points      Int      @default(100)
+  flag        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  submissions Submission[]
+}
+
+model Lab {
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  imageName   String?
+  status      LabStatus @default(DRAFT)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Ticket {
+  id          String         @id @default(cuid())
+  ticketCode  String         @unique
+  title       String
+  description String
+  priority    TicketPriority @default(MEDIUM)
+  status      TicketStatus   @default(OPEN)
+  points      Int            @default(100)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model UserProgress {
+  id          String    @id @default(cuid())
+  profileId   String
+  lessonId    String
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  lesson  Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, lessonId])
+}
+
+model Submission {
+  id        String   @id @default(cuid())
+  profileId String
+  missionId String
+  answer    String
+  isCorrect Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  mission Mission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+}
+
+enum UserRole {
+  STUDENT
+  ADMIN
+}
+
+enum LabStatus {
+  DRAFT
+  READY
+  DISABLED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CLOSED
+}
