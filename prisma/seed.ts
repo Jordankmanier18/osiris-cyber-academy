@@ -127,6 +127,10 @@ async function main() {
   const mission1 = await prisma.mission.create({
     data: {
       title: "Find the Open Port",
+      slug: "find-the-open-port",
+      slug: "phishing-email-analysis",
+      slug: "password-reset-ticket",
+      slug: "suspicious-login-alert",
       description:
         "A simulated workstation is running several services. Identify the exposed management port and submit the correct answer.",
       difficulty: "Beginner",

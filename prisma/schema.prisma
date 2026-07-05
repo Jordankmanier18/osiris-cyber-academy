@@ -59,7 +59,9 @@ model Lesson {
 model Mission {
   id          String   @id @default(cuid())
   title       String
+  slug        String
   description String
+  scenario    String   @default("")
   difficulty  String   @default("Beginner")
   points      Int      @default(100)
   flag        String?
