@@ -1,5 +1,39 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+
+async function submitMission(formData: FormData) {
+  "use server";
+
+  const missionId = formData.get("missionId") as string;
+  const answer = formData.get("answer") as string;
+
+  if (!missionId || !answer) {
+    throw new Error("Mission ID and answer are required.");
+  }
+
+  const demoProfile = await prisma.profile.upsert({
+  where: {
+    email: "demo@student.osiris.local",
+  },
+  update: {},
+  create: {
+    email: "demo@student.osiris.local",
+    fullName: "Demo Student",
+    role: "STUDENT",
+  },
+});
+
+await prisma.submission.create({
+  data: {
+    missionId,
+    profileId: demoProfile.id,
+    answer,
+  },
+});
+
+  redirect("/missions");
+}
 
 export default async function MissionSubmitPage({
   params,
@@ -44,19 +78,26 @@ export default async function MissionSubmitPage({
         </p>
       </div>
 
-      <div className="rounded-lg border p-6 space-y-4">
+      <form action={submitMission} className="rounded-lg border p-6 space-y-4">
+        <input type="hidden" name="missionId" value={mission.id} />
+
         <div>
           <label className="text-sm font-medium">Submission</label>
           <textarea
+            name="answer"
+            required
             className="mt-2 min-h-32 w-full rounded-md border bg-background p-3 text-sm"
             placeholder="Paste your answer, command output, screenshot notes, or investigation summary here..."
           />
         </div>
 
-        <button className="rounded-md bg-primary px-4 py-2 text-primary-foreground">
+        <button
+          type="submit"
+          className="rounded-md bg-primary px-4 py-2 text-primary-foreground"
+        >
           Submit Mission
         </button>
-      </div>
+      </form>
     </div>
   );
 }

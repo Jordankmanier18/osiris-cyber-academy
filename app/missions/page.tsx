@@ -1,56 +1,48 @@
+import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
+import { prisma } from "@/lib/prisma";
 
-const missions = [
-  {
-    title: "Linux Basics Lab",
-    level: "Beginner",
-    points: 100,
-    description: "Use basic Linux commands to navigate files, inspect users, and find your first flag.",
-  },
-  {
-    title: "Network Recon Mission",
-    level: "Beginner",
-    points: 150,
-    description: "Identify open ports, services, and basic network information in a safe lab environment.",
-  },
-  {
-    title: "SOC Alert Triage",
-    level: "Beginner",
-    points: 200,
-    description: "Review a simulated security alert and decide whether it is a true positive or false positive.",
-  },
-];
+export default async function MissionsPage() {
+  const missions = await prisma.mission.findMany({
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
 
-export default function MissionsPage() {
   return (
     <AppShell>
-      <section className="space-y-6">
+      <div className="space-y-6">
         <div>
-          <h1 className="text-4xl font-bold">Missions</h1>
-          <p className="mt-4 max-w-2xl text-gray-400">
-            Hands-on cybersecurity challenges that turn lessons into real experience.
+          <h1 className="text-3xl font-bold">Missions</h1>
+          <p className="mt-2 text-muted-foreground">
+            Choose a mission, investigate the scenario, and submit your findings.
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-4">
           {missions.map((mission) => (
-            <div
-              key={mission.title}
-              className="rounded-2xl border border-gray-800 bg-gray-950 p-6"
+            <Link
+              key={mission.id}
+              href={`/missions/${mission.slug}`}
+              className="block rounded-lg border p-4 transition hover:bg-muted"
             >
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-cyan-400">{mission.level}</p>
-                <p className="text-sm text-gray-400">{mission.points} XP</p>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="font-semibold">{mission.title}</h2>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {mission.description}
+                  </p>
+                </div>
+
+                <div className="text-right text-sm">
+                  <p className="font-medium">{mission.difficulty}</p>
+                  <p className="text-muted-foreground">{mission.points} pts</p>
+                </div>
               </div>
-              <h2 className="mt-3 text-2xl font-semibold">{mission.title}</h2>
-              <p className="mt-3 text-gray-400">{mission.description}</p>
-              <button className="mt-6 rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-black">
-                Start Mission
-              </button>
-            </div>
+            </Link>
           ))}
         </div>
-      </section>
+      </div>
     </AppShell>
   );
 }
