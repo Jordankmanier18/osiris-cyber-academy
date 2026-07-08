@@ -6,139 +6,130 @@ datasource db {
   provider = "postgresql"
 }
 
-model Profile {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  fullName  String?
-  role      UserRole @default(STUDENT)
-  xp        Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model User {
+  id            String   @id @default(cuid())
+  name          String?
+  email         String?  @unique
+  currentRoleId String?
+  totalXp       Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  progress    UserProgress[]
+  currentRole Role?          @relation(fields: [currentRoleId], references: [id])
   submissions Submission[]
+  progress    UserProgress[]
 }
 
-model Course {
-  id          String   @id @default(cuid())
-  title       String
-  description String
-  level       String   @default("Beginner")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model Role {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  level         Int      @unique
+  description   String
+  framework     String?
+  certification String?
+  xpRequired    Int      @default(0)
+  nextRoleSlug  String?
+  createdAt     DateTime @default(now())
 
-  modules Module[]
-}
-
-model Module {
-  id          String   @id @default(cuid())
-  title       String
-  description String
-  order       Int      @default(0)
-  courseId    String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  lessons Lesson[]
+  users    User[]
+  missions Mission[]
+  lessons  Lesson[]
+  labs     Lab[]
+  tickets  Ticket[]
 }
 
 model Lesson {
-  id        String   @id @default(cuid())
-  title     String
-  content   String
-  order     Int      @default(0)
-  moduleId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String
+  content     String
+  roleId      String
+  difficulty  String
+  xpReward    Int      @default(10)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
 
-  module   Module         @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  role     Role           @relation(fields: [roleId], references: [id])
   progress UserProgress[]
 }
 
 model Mission {
-  id          String   @id @default(cuid())
-  title       String
-  slug        String
-  description String
-  scenario    String   @default("")
-  difficulty  String   @default("Beginner")
-  points      Int      @default(100)
-  flag        String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  title          String
+  slug           String   @unique
+  description    String
+  scenario       String
+  difficulty     String
+  roleId         String
+  category       String
+  xpReward       Int      @default(25)
+  expectedAnswer String?
+  createdAt      DateTime @default(now())
 
+  role        Role         @relation(fields: [roleId], references: [id])
   submissions Submission[]
 }
 
 model Lab {
-  id          String    @id @default(cuid())
-  title       String
-  description String
-  imageName   String?
-  status      LabStatus @default(DRAFT)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id           String   @id @default(cuid())
+  title        String
+  slug         String   @unique
+  description  String
+  labType      String
+  roleId       String
+  difficulty   String
+  xpReward     Int      @default(20)
+  instructions String
+  createdAt    DateTime @default(now())
+
+  role     Role           @relation(fields: [roleId], references: [id])
+  progress UserProgress[]
 }
 
 model Ticket {
-  id          String         @id @default(cuid())
-  ticketCode  String         @unique
-  title       String
-  description String
-  priority    TicketPriority @default(MEDIUM)
-  status      TicketStatus   @default(OPEN)
-  points      Int            @default(100)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-}
+  id             String   @id @default(cuid())
+  title          String
+  ticketCode     String   @unique
+  priority       String
+  scenario       String
+  evidence       String
+  requiredAction String
+  roleId         String
+  difficulty     String
+  xpReward       Int      @default(15)
+  createdAt      DateTime @default(now())
 
-model UserProgress {
-  id          String    @id @default(cuid())
-  profileId   String
-  lessonId    String
-  completed   Boolean   @default(false)
-  completedAt DateTime?
-
-  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  lesson  Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-
-  @@unique([profileId, lessonId])
+  role     Role           @relation(fields: [roleId], references: [id])
+  progress UserProgress[]
 }
 
 model Submission {
   id        String   @id @default(cuid())
-  profileId String
-  missionId String
   answer    String
-  isCorrect Boolean  @default(false)
+  score     Int?
+  feedback  String?
+  missionId String
+  userId    String?
   createdAt DateTime @default(now())
 
-  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  mission Mission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  mission Mission @relation(fields: [missionId], references: [id])
+  user    User?   @relation(fields: [userId], references: [id])
 }
 
-enum UserRole {
-  STUDENT
-  ADMIN
-}
+model UserProgress {
+  id          String    @id @default(cuid())
+  userId      String
+  lessonId    String?
+  labId       String?
+  ticketId    String?
+  status      String    @default("not_started")
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
 
-enum LabStatus {
-  DRAFT
-  READY
-  DISABLED
-}
-
-enum TicketPriority {
-  LOW
-  MEDIUM
-  HIGH
-  CRITICAL
-}
-
-enum TicketStatus {
-  OPEN
-  IN_PROGRESS
-  COMPLETED
-  CLOSED
+  user   User    @relation(fields: [userId], references: [id])
+  lesson Lesson? @relation(fields: [lessonId], references: [id])
+  lab    Lab?    @relation(fields: [labId], references: [id])
+  ticket Ticket? @relation(fields: [ticketId], references: [id])
 }

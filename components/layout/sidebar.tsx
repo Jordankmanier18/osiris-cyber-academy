@@ -12,30 +12,46 @@ const navItems = [
 
 export function Sidebar() {
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 border-r border-gray-800 bg-gray-950 p-6 text-white">
-      <div className="mb-10">
-        <p className="text-xs uppercase tracking-[0.3em] text-cyan-400">
+    <aside className="fixed left-0 top-0 hidden h-screen w-72 border-r border-yellow-500/20 bg-zinc-950/95 p-6 text-white xl:block">
+      <Link href="/dashboard" className="block">
+        <p className="text-xs font-bold uppercase tracking-[0.3em] text-yellow-400">
           Osiris
         </p>
-        <h1 className="mt-2 text-xl font-bold">Cyber Academy</h1>
+        <h1 className="mt-2 text-2xl font-black tracking-tight text-white">
+          Cyber Academy
+        </h1>
+      </Link>
+
+      <div className="mt-8 rounded-2xl border border-yellow-500/20 bg-black p-4">
+        <p className="text-xs uppercase tracking-widest text-zinc-500">
+          Current Path
+        </p>
+        <p className="mt-2 font-semibold text-yellow-400">
+          Cyber Cadet Track
+        </p>
+        <p className="mt-1 text-xs leading-5 text-zinc-500">
+          Progress through lessons, labs, missions, and tickets.
+        </p>
       </div>
 
-      <nav className="space-y-2">
+      <nav className="mt-8 space-y-2">
         {navItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}
-            className="block rounded-xl px-4 py-3 text-sm text-gray-300 hover:bg-cyan-950/40 hover:text-white"
+            className="block rounded-xl border border-transparent px-4 py-3 text-sm font-semibold text-zinc-300 transition hover:border-yellow-500/30 hover:bg-yellow-400/10 hover:text-yellow-400"
           >
             {item.label}
           </Link>
         ))}
       </nav>
 
-      <div className="absolute bottom-6 left-6 right-6 rounded-xl border border-cyan-900/60 bg-cyan-950/20 p-4">
-        <p className="text-sm font-semibold">Student Mode</p>
-        <p className="mt-1 text-xs text-gray-400">
-          MVP build in progress
+      <div className="absolute bottom-6 left-6 right-6 rounded-2xl border border-yellow-500/20 bg-black p-4">
+        <p className="text-xs uppercase tracking-widest text-zinc-500">
+          System Status
+        </p>
+        <p className="mt-2 text-sm font-semibold text-green-400">
+          Training Environment Online
         </p>
       </div>
     </aside>

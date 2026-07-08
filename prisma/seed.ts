@@ -11,266 +11,394 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
-  console.log("Seeding Osiris Cyber Academy...");
+  console.log("Seeding Osiris Cyber Academy data...");
 
-  // Clean existing data in the correct order
-  await prisma.submission.deleteMany();
   await prisma.userProgress.deleteMany();
+  await prisma.submission.deleteMany();
   await prisma.ticket.deleteMany();
   await prisma.lab.deleteMany();
-  await prisma.mission.deleteMany();
   await prisma.lesson.deleteMany();
-  await prisma.module.deleteMany();
-  await prisma.course.deleteMany();
-  await prisma.profile.deleteMany();
+  await prisma.mission.deleteMany();
+  await prisma.user.deleteMany();
+  await prisma.role.deleteMany();
 
-  // Profiles
-  const admin = await prisma.profile.create({
+  const cyberCadet = await prisma.role.create({
     data: {
-      email: "admin@osiriscyberacademy.com",
-      fullName: "Osiris Admin",
-      role: "ADMIN",
-      xp: 2500,
-    },
-  });
-
-  const student = await prisma.profile.create({
-    data: {
-      email: "student@osiriscyberacademy.com",
-      fullName: "David Gibson",
-      role: "STUDENT",
-      xp: 350,
-    },
-  });
-
-  // Course with modules and lessons
-  const course = await prisma.course.create({
-    data: {
-      title: "Cybersecurity Foundations",
+      name: "Cyber Cadet",
+      slug: "cyber-cadet",
+      level: 1,
       description:
-        "A beginner-friendly course that teaches students how computers, networks, threats, and security tools work in the real world.",
-      level: "Beginner",
-      modules: {
-        create: [
-          {
-            title: "Module 1: Computing Basics",
-            description:
-              "Understand hardware, software, operating systems, files, applications, and how computers process information.",
-            order: 1,
-            lessons: {
-              create: [
-                {
-                  title: "What Is a Computer?",
-                  content:
-                    "A computer is a system that receives input, processes data, stores information, and produces output. Cybersecurity starts with understanding how these systems work.",
-                  order: 1,
-                },
-                {
-                  title: "Operating Systems",
-                  content:
-                    "An operating system manages hardware, software, files, users, permissions, memory, and processes. Windows, macOS, and Linux are common examples.",
-                  order: 2,
-                },
-              ],
-            },
-          },
-          {
-            title: "Module 2: Networking Basics",
-            description:
-              "Learn IP addresses, ports, DNS, routers, switches, firewalls, and how devices communicate.",
-            order: 2,
-            lessons: {
-              create: [
-                {
-                  title: "What Is a Network?",
-                  content:
-                    "A network is a group of connected devices that can communicate and share resources. The internet is the largest example of a network.",
-                  order: 1,
-                },
-                {
-                  title: "Ports and Protocols",
-                  content:
-                    "Ports help computers organize network communication. Protocols like HTTP, HTTPS, DNS, SSH, and RDP define how communication happens.",
-                  order: 2,
-                },
-              ],
-            },
-          },
-          {
-            title: "Module 3: Security Fundamentals",
-            description:
-              "Learn core security concepts including CIA triad, authentication, authorization, patching, backups, and defense in depth.",
-            order: 3,
-            lessons: {
-              create: [
-                {
-                  title: "The CIA Triad",
-                  content:
-                    "Confidentiality protects data from unauthorized access. Integrity protects data from unauthorized changes. Availability makes sure systems are accessible when needed.",
-                  order: 1,
-                },
-                {
-                  title: "Defense in Depth",
-                  content:
-                    "Defense in depth means using multiple layers of protection so one failed control does not expose the entire system.",
-                  order: 2,
-                },
-              ],
-            },
-          },
-        ],
+        "The beginner role for new students learning computers, operating systems, networking basics, and cybersecurity fundamentals.",
+      framework: "CompTIA Tech+",
+      certification: "Tech+ / IT Fundamentals",
+      xpRequired: 0,
+      nextRoleSlug: "it-support-trainee",
+    },
+  });
+
+  const itSupportTrainee = await prisma.role.create({
+    data: {
+      name: "IT Support Trainee",
+      slug: "it-support-trainee",
+      level: 2,
+      description:
+        "Introduces help desk workflows, endpoint troubleshooting, user support, accounts, passwords, and basic device security.",
+      framework: "CompTIA A+",
+      certification: "CompTIA A+",
+      xpRequired: 150,
+      nextRoleSlug: "network-support-trainee",
+    },
+  });
+
+  const networkSupportTrainee = await prisma.role.create({
+    data: {
+      name: "Network Support Trainee",
+      slug: "network-support-trainee",
+      level: 3,
+      description:
+        "Focuses on networking fundamentals including IP addressing, DNS, DHCP, ports, firewalls, and basic connectivity troubleshooting.",
+      framework: "CompTIA Network+",
+      certification: "CompTIA Network+",
+      xpRequired: 350,
+      nextRoleSlug: "security-trainee",
+    },
+  });
+
+  const securityTrainee = await prisma.role.create({
+    data: {
+      name: "Security Trainee",
+      slug: "security-trainee",
+      level: 4,
+      description:
+        "Introduces security concepts, threats, IAM, MFA, phishing, logs, risk, and foundational defensive thinking.",
+      framework: "CompTIA Security+",
+      certification: "CompTIA Security+",
+      xpRequired: 600,
+      nextRoleSlug: "junior-security-analyst",
+    },
+  });
+
+  const juniorSecurityAnalyst = await prisma.role.create({
+    data: {
+      name: "Junior Security Analyst",
+      slug: "junior-security-analyst",
+      level: 5,
+      description:
+        "Prepares the student for SOC Tier 1 work through alert triage, log review, escalation, incident notes, and basic SIEM workflows.",
+      framework: "Security+ / SOC Tier 1 / NICE Cyber Defense Analyst",
+      certification: "Security+ / SOC Analyst Foundations",
+      xpRequired: 900,
+      nextRoleSlug: "soc-analyst-i",
+    },
+  });
+
+  await prisma.user.create({
+    data: {
+      name: "Jordan Manier",
+      email: "jordan@osiris.local",
+      currentRoleId: cyberCadet.id,
+      totalXp: 0,
+    },
+  });
+
+  await prisma.lesson.createMany({
+    data: [
+      {
+        title: "Welcome to Osiris Cyber Academy",
+        slug: "welcome-to-osiris-cyber-academy",
+        description:
+          "Learn how the platform works, how roles unlock, and how missions, labs, lessons, and tickets fit together.",
+        content:
+          "Welcome to Osiris Cyber Academy. You will progress through cybersecurity roles by completing lessons, labs, missions, and workplace tickets.",
+        roleId: cyberCadet.id,
+        difficulty: "Beginner",
+        xpReward: 10,
+        order: 1,
       },
-    },
+      {
+        title: "What Is a Computer?",
+        slug: "what-is-a-computer",
+        description:
+          "Understand the basic parts of a computer, including CPU, RAM, storage, operating systems, applications, and users.",
+        content:
+          "A computer is a system that receives input, processes data, stores information, and produces output.",
+        roleId: cyberCadet.id,
+        difficulty: "Beginner",
+        xpReward: 10,
+        order: 2,
+      },
+      {
+        title: "Operating Systems Explained",
+        slug: "operating-systems-explained",
+        description:
+          "Learn what operating systems do and how Windows, Linux, and macOS help users interact with hardware and software.",
+        content:
+          "An operating system manages hardware, applications, files, users, permissions, and system resources.",
+        roleId: cyberCadet.id,
+        difficulty: "Beginner",
+        xpReward: 10,
+        order: 3,
+      },
+      {
+        title: "What Is a Network?",
+        slug: "what-is-a-network",
+        description:
+          "Learn the basics of networks, IP addresses, routers, switches, DNS, DHCP, and internet connectivity.",
+        content:
+          "A network connects devices so they can communicate, share resources, and access services.",
+        roleId: networkSupportTrainee.id,
+        difficulty: "Beginner",
+        xpReward: 15,
+        order: 1,
+      },
+      {
+        title: "Introduction to Cybersecurity",
+        slug: "introduction-to-cybersecurity",
+        description:
+          "Learn the purpose of cybersecurity and the concepts of confidentiality, integrity, and availability.",
+        content:
+          "Cybersecurity protects systems, networks, applications, users, and data from unauthorized access, misuse, disruption, and damage.",
+        roleId: securityTrainee.id,
+        difficulty: "Beginner",
+        xpReward: 15,
+        order: 1,
+      },
+      {
+        title: "Introduction to SOC Operations",
+        slug: "introduction-to-soc-operations",
+        description:
+          "Learn what a Security Operations Center does and how analysts monitor, triage, escalate, and document alerts.",
+        content:
+          "A SOC is responsible for monitoring security events, investigating alerts, escalating incidents, and helping defend the organization.",
+        roleId: juniorSecurityAnalyst.id,
+        difficulty: "Beginner",
+        xpReward: 20,
+        order: 1,
+      },
+    ],
   });
 
-  // Missions
-  const mission1 = await prisma.mission.create({
-    data: {
-      title: "Find the Open Port",
-      slug: "find-the-open-port",
-      slug: "phishing-email-analysis",
-      slug: "password-reset-ticket",
-      slug: "suspicious-login-alert",
-      description:
-        "A simulated workstation is running several services. Identify the exposed management port and submit the correct answer.",
-      difficulty: "Beginner",
-      points: 100,
-      flag: "OSIRIS{OPEN_PORT_FOUND}",
-    },
+  await prisma.lab.createMany({
+    data: [
+      {
+        title: "Identify Computer Components",
+        slug: "identify-computer-components",
+        description:
+          "Match basic computer components to their purpose in a simulated workstation.",
+        labType: "Visual Lab",
+        roleId: cyberCadet.id,
+        difficulty: "Beginner",
+        xpReward: 20,
+        instructions:
+          "Review the simulated workstation inventory and identify the CPU, RAM, storage, network adapter, and operating system.",
+      },
+      {
+        title: "Troubleshoot a Simulated Laptop",
+        slug: "troubleshoot-a-simulated-laptop",
+        description:
+          "Review symptoms from a user laptop and choose the most likely troubleshooting steps.",
+        labType: "Endpoint Lab",
+        roleId: itSupportTrainee.id,
+        difficulty: "Beginner",
+        xpReward: 20,
+        instructions:
+          "Read the user complaint, review the device status, and select the best troubleshooting path.",
+      },
+      {
+        title: "Review Simulated Network Output",
+        slug: "review-simulated-network-output",
+        description:
+          "Analyze simple network command output to identify IP, gateway, DNS, and connectivity status.",
+        labType: "Network Lab",
+        roleId: networkSupportTrainee.id,
+        difficulty: "Beginner",
+        xpReward: 25,
+        instructions:
+          "Review the simulated ipconfig and ping output. Identify the IP address, gateway, DNS server, and connectivity issue.",
+      },
+      {
+        title: "Review Authentication Logs",
+        slug: "review-authentication-logs",
+        description:
+          "Inspect simulated login logs and identify failed logins, successful logins, and suspicious behavior.",
+        labType: "Log Analysis Lab",
+        roleId: securityTrainee.id,
+        difficulty: "Beginner",
+        xpReward: 25,
+        instructions:
+          "Review the authentication log entries and identify whether the activity appears normal or suspicious.",
+      },
+      {
+        title: "Search Simulated SIEM Logs",
+        slug: "search-simulated-siem-logs",
+        description:
+          "Use a simulated SIEM search interface to investigate a suspicious login alert.",
+        labType: "SIEM Lab",
+        roleId: juniorSecurityAnalyst.id,
+        difficulty: "Beginner",
+        xpReward: 30,
+        instructions:
+          "Search the provided log data for the user, source IP, event time, MFA status, and related activity.",
+      },
+    ],
   });
 
   await prisma.mission.createMany({
     data: [
       {
-        title: "Phishing Email Investigation",
+        title: "First Day at Osiris",
+        slug: "first-day-at-osiris",
         description:
-          "Review a suspicious email and identify the red flags that suggest it may be a phishing attempt.",
+          "Complete your first onboarding mission and learn how role-based progression works.",
+        scenario:
+          "You have joined Osiris Cyber Academy as a Cyber Cadet. Your first task is to understand how your training dashboard works.",
         difficulty: "Beginner",
-        points: 150,
-        flag: "OSIRIS{PHISHING_DETECTED}",
+        roleId: cyberCadet.id,
+        category: "Onboarding",
+        xpReward: 25,
+        expectedAnswer:
+          "The student should explain that lessons teach concepts, labs provide practice, missions test scenarios, and tickets simulate workplace requests.",
       },
       {
-        title: "Weak Password Audit",
+        title: "Fix a Slow Workstation",
+        slug: "fix-a-slow-workstation",
         description:
-          "Analyze a list of sample accounts and identify which password pattern creates the biggest security risk.",
+          "Review a user complaint about a slow workstation and recommend the first troubleshooting steps.",
+        scenario:
+          "A user reports that their computer has become very slow after installing several programs and opening many browser tabs.",
         difficulty: "Beginner",
-        points: 125,
-        flag: "OSIRIS{PASSWORD_RISK_FOUND}",
+        roleId: itSupportTrainee.id,
+        category: "Endpoint Troubleshooting",
+        xpReward: 30,
+        expectedAnswer:
+          "The student should recommend checking running applications, startup programs, storage usage, memory usage, and possible malware indicators.",
       },
       {
-        title: "Log Review Challenge",
+        title: "Diagnose a DNS Issue",
+        slug: "diagnose-a-dns-issue",
         description:
-          "Review simulated authentication logs and identify the suspicious login behavior.",
-        difficulty: "Intermediate",
-        points: 250,
-        flag: "OSIRIS{SUSPICIOUS_LOGIN}",
+          "Determine whether a simulated network problem is caused by DNS, connectivity, or the destination server.",
+        scenario:
+          "A user can ping 8.8.8.8 but cannot browse to internal.osiris.local.",
+        difficulty: "Beginner",
+        roleId: networkSupportTrainee.id,
+        category: "Networking",
+        xpReward: 35,
+        expectedAnswer:
+          "The student should recognize that successful IP connectivity with name resolution failure suggests a DNS issue.",
+      },
+      {
+        title: "Identify a Phishing Email",
+        slug: "identify-a-phishing-email",
+        description:
+          "Review a suspicious email and identify red flags that indicate phishing.",
+        scenario:
+          "A user received an urgent email claiming their account will be disabled unless they click a link and re-enter their password.",
+        difficulty: "Beginner",
+        roleId: securityTrainee.id,
+        category: "Security Awareness",
+        xpReward: 35,
+        expectedAnswer:
+          "The student should identify urgency, suspicious links, credential request, sender mismatch, and poor grammar as phishing indicators.",
+      },
+      {
+        title: "Triage a Suspicious Login Alert",
+        slug: "triage-a-suspicious-login-alert",
+        description:
+          "Investigate a suspicious login alert and determine whether it should be escalated.",
+        scenario:
+          "A successful login occurred from an unusual foreign IP address at 2:14 AM. MFA was passed, but the user has no travel history.",
+        difficulty: "Beginner",
+        roleId: juniorSecurityAnalyst.id,
+        category: "SOC Alert Triage",
+        xpReward: 50,
+        expectedAnswer:
+          "The student should identify the activity as suspicious, verify user context, review related logs, check MFA details, and escalate if compromise is suspected.",
       },
     ],
   });
 
-  // Labs
-  await prisma.lab.createMany({
-    data: [
-      {
-        title: "Windows Workstation Security Lab",
-        description:
-          "Practice basic Windows hardening, user account review, firewall checks, and update validation.",
-        imageName: "windows-workstation-lab",
-        status: "READY",
-      },
-      {
-        title: "Linux Command Line Lab",
-        description:
-          "Learn basic Linux navigation, file permissions, process review, and system information commands.",
-        imageName: "linux-cli-lab",
-        status: "READY",
-      },
-      {
-        title: "Network Scanning Lab",
-        description:
-          "Practice safe scanning concepts in a controlled environment using simulated hosts.",
-        imageName: "network-scanning-lab",
-        status: "DRAFT",
-      },
-    ],
-  });
-
-  // Tickets
   await prisma.ticket.createMany({
     data: [
       {
-        ticketCode: "OSA-1001",
-        title: "User Cannot Access Training Portal",
-        description:
-          "A student reports that they cannot access the training portal. Review the issue and determine the likely cause.",
-        priority: "MEDIUM",
-        status: "OPEN",
-        points: 100,
+        title: "User Cannot Find a File",
+        ticketCode: "OSR-CC-001",
+        priority: "Low",
+        scenario:
+          "A user saved a document but cannot find it on their computer.",
+        evidence:
+          "User says the file was created yesterday and may have been saved to Downloads or Documents.",
+        requiredAction:
+          "Explain how you would help the user locate the file.",
+        roleId: cyberCadet.id,
+        difficulty: "Beginner",
+        xpReward: 15,
       },
       {
-        ticketCode: "OSA-1002",
-        title: "Suspicious Login Alert",
-        description:
-          "A login alert was generated after multiple failed attempts from an unfamiliar location.",
-        priority: "HIGH",
-        status: "IN_PROGRESS",
-        points: 200,
+        title: "User Cannot Access Email",
+        ticketCode: "OSR-IT-001",
+        priority: "Medium",
+        scenario:
+          "A user reports they cannot access their email after changing their password.",
+        evidence:
+          "The user can log into their workstation but email says authentication failed.",
+        requiredAction:
+          "Recommend troubleshooting steps for the email access issue.",
+        roleId: itSupportTrainee.id,
+        difficulty: "Beginner",
+        xpReward: 20,
       },
       {
-        ticketCode: "OSA-1003",
-        title: "Lab VM Not Starting",
-        description:
-          "A student reports that their assigned lab machine is not starting. Investigate the ticket and document next steps.",
-        priority: "LOW",
-        status: "OPEN",
-        points: 75,
+        title: "Application Cannot Reach Server",
+        ticketCode: "OSR-NET-001",
+        priority: "Medium",
+        scenario:
+          "A business application cannot connect to its backend server.",
+        evidence:
+          "Ping to the server fails by hostname but succeeds by IP address.",
+        requiredAction:
+          "Determine the likely issue and explain the next step.",
+        roleId: networkSupportTrainee.id,
+        difficulty: "Beginner",
+        xpReward: 25,
       },
       {
-        ticketCode: "OSA-1004",
-        title: "Critical Server Patch Required",
-        description:
-          "A simulated server is missing an important security patch. Review the finding and prioritize remediation.",
-        priority: "CRITICAL",
-        status: "OPEN",
-        points: 300,
+        title: "User Reported a Suspicious Email",
+        ticketCode: "OSR-SEC-001",
+        priority: "High",
+        scenario:
+          "A user reports an email asking them to verify their password immediately.",
+        evidence:
+          "Sender: security-alert@osiris-support.co. Link text: Verify Account Now.",
+        requiredAction:
+          "Identify whether this appears suspicious and what action should be taken.",
+        roleId: securityTrainee.id,
+        difficulty: "Beginner",
+        xpReward: 25,
+      },
+      {
+        title: "Suspicious Login from Foreign IP",
+        ticketCode: "OSR-SOC-001",
+        priority: "High",
+        scenario:
+          "An employee account successfully logged in from a foreign IP address outside normal working hours.",
+        evidence:
+          "User: m.turner@osiris.local\nLocation: Unknown\nIP: 185.220.101.45\nTime: 02:14 AM\nMFA: Passed",
+        requiredAction:
+          "Determine whether this alert should be escalated and explain your reasoning.",
+        roleId: juniorSecurityAnalyst.id,
+        difficulty: "Beginner",
+        xpReward: 30,
       },
     ],
   });
 
-  // Progress and submission examples
-  const firstLesson = await prisma.lesson.findFirst({
-    where: {
-      title: "What Is a Computer?",
-    },
-  });
-
-  if (firstLesson) {
-    await prisma.userProgress.create({
-      data: {
-        profileId: student.id,
-        lessonId: firstLesson.id,
-        completed: true,
-        completedAt: new Date(),
-      },
-    });
-  }
-
-  await prisma.submission.create({
-    data: {
-      profileId: student.id,
-      missionId: mission1.id,
-      answer: "OSIRIS{OPEN_PORT_FOUND}",
-      isCorrect: true,
-    },
-  });
-
   console.log("Seed completed successfully.");
-  console.log({ admin: admin.email, student: student.email, course: course.title });
 }
 
 main()
   .catch((error) => {
-    console.error("Seed failed:", error);
+    console.error(error);
     process.exit(1);
   })
   .finally(async () => {

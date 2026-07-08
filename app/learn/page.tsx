@@ -1,87 +1,96 @@
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
 
 export default async function LearnPage() {
-  const courses = await prisma.course.findMany({
+  const user = await prisma.user.findFirst({
     include: {
-      modules: {
+      currentRole: true,
+    },
+  });
+
+  const roles = await prisma.role.findMany({
+    orderBy: {
+      level: "asc",
+    },
+    include: {
+      lessons: {
         orderBy: {
           order: "asc",
-        },
-        include: {
-          lessons: {
-            orderBy: {
-              order: "asc",
-            },
-          },
         },
       },
     },
   });
 
-  return (
-    <main className="min-h-screen bg-slate-950 p-6 text-white">
-      <section className="mb-8">
-        <p className="text-sm uppercase tracking-[0.3em] text-cyan-400">
-          Learning Path
+  const currentRole = user?.currentRole ?? roles[0];
+
+  if (!currentRole) {
+    return (
+      <div className="osiris-card">
+        <p className="osiris-eyebrow">Learning Path</p>
+        <h1 className="mt-3 text-3xl font-bold text-white">No Lessons Found</h1>
+        <p className="mt-3 text-zinc-400">
+          No roles were found. Run the seed command first.
         </p>
-        <h1 className="mt-3 text-4xl font-bold">Cybersecurity Courses</h1>
-        <p className="mt-3 max-w-2xl text-slate-300">
-          Build your foundation through structured courses, modules, and lessons.
+      </div>
+    );
+  }
+
+  const unlockedRoles = roles.filter((role) => role.level <= currentRole.level);
+
+  const lessons = unlockedRoles.flatMap((role) =>
+    role.lessons.map((lesson) => ({
+      ...lesson,
+      roleName: role.name,
+      framework: role.framework,
+    })),
+  );
+
+  return (
+    <div className="space-y-8">
+      <section className="osiris-panel p-8">
+        <p className="osiris-eyebrow">Learning Path</p>
+        <h1 className="mt-3 osiris-title">Unlocked Lessons</h1>
+        <p className="mt-4 max-w-3xl osiris-subtitle">
+          Lessons gradually build the knowledge needed for each role. As the
+          student is promoted, deeper cybersecurity concepts unlock.
         </p>
       </section>
 
-      <section className="space-y-6">
-        {courses.map((course) => (
-          <div
-            key={course.id}
-            className="rounded-2xl border border-slate-800 bg-slate-900 p-6"
-          >
-            <div className="mb-5 flex items-start justify-between gap-4">
+      <section className="space-y-4">
+        {lessons.map((lesson) => (
+          <div key={lesson.id} className="osiris-card osiris-card-hover">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <p className="text-sm text-cyan-400">{course.level}</p>
-                <h2 className="mt-1 text-2xl font-bold">{course.title}</h2>
-                <p className="mt-2 text-slate-300">{course.description}</p>
+                <div className="flex flex-wrap gap-2">
+                  <span className="osiris-badge">{lesson.difficulty}</span>
+                  <span className="osiris-badge-dark">{lesson.roleName}</span>
+                  <span className="osiris-badge-dark">{lesson.framework}</span>
+                </div>
+
+                <h2 className="mt-5 text-2xl font-bold text-white">
+                  {lesson.title}
+                </h2>
+
+                <p className="mt-3 max-w-4xl text-sm leading-6 text-zinc-400">
+                  {lesson.description}
+                </p>
               </div>
 
-              <Link
-                href="/dashboard"
-                className="rounded-xl border border-slate-700 px-4 py-2 text-sm hover:border-cyan-400"
-              >
-                Dashboard
-              </Link>
+              <div className="rounded-2xl border border-yellow-500/20 bg-black px-4 py-3 text-sm font-bold text-yellow-400">
+                {lesson.xpReward} XP
+              </div>
             </div>
 
-            <div className="space-y-4">
-              {course.modules.map((module) => (
-                <div
-                  key={module.id}
-                  className="rounded-xl border border-slate-800 bg-slate-950 p-4"
-                >
-                  <h3 className="text-lg font-semibold">{module.title}</h3>
-                  <p className="mt-1 text-sm text-slate-400">
-                    {module.description}
-                  </p>
-
-                  <div className="mt-4 grid gap-3 md:grid-cols-2">
-                    {module.lessons.map((lesson) => (
-                      <div
-                        key={lesson.id}
-                        className="rounded-lg border border-slate-800 bg-slate-900 p-4"
-                      >
-                        <p className="font-semibold">{lesson.title}</p>
-                        <p className="mt-2 text-sm text-slate-400">
-                          {lesson.content}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+            <div className="mt-5 rounded-2xl border border-yellow-500/10 bg-black p-4">
+              <p className="text-xs uppercase tracking-widest text-zinc-500">
+                Lesson Preview
+              </p>
+              <p className="mt-2 text-sm leading-6 text-zinc-400">
+                {lesson.content}
+              </p>
             </div>
           </div>
         ))}
       </section>
-    </main>
+    </div>
   );
 }
