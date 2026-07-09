@@ -96,7 +96,7 @@ async function main() {
     data: {
       name: "Jordan Manier",
       email: "jordan@osiris.local",
-      currentRoleId: cyberCadet.id,
+      roleId: cyberCadet.id,
       totalXp: 0,
     },
   });

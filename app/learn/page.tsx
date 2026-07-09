@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 export default async function LearnPage() {
   const user = await prisma.user.findFirst({
     include: {
-      currentRole: true,
+      role: true,
     },
   });
 
@@ -20,9 +20,9 @@ export default async function LearnPage() {
     },
   });
 
-  const currentRole = user?.currentRole ?? roles[0];
+  const role = user?.role ?? roles[0];
 
-  if (!currentRole) {
+  if (!role) {
     return (
       <div className="osiris-card">
         <p className="osiris-eyebrow">Learning Path</p>
@@ -34,7 +34,7 @@ export default async function LearnPage() {
     );
   }
 
-  const unlockedRoles = roles.filter((role) => role.level <= currentRole.level);
+  const unlockedRoles = roles.filter((role) => role.level <= role.level);
 
   const lessons = unlockedRoles.flatMap((role) =>
     role.lessons.map((lesson) => ({

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 
 async function submitMission(formData: FormData) {
   "use server";
@@ -24,11 +25,17 @@ async function submitMission(formData: FormData) {
   },
 });
 
+const session = await auth();
+
+if (!session?.user) {
+  redirect("/login");
+}
+
 await prisma.submission.create({
   data: {
-    missionId,
-    profileId: demoProfile.id,
     answer,
+    missionId: mission.id,
+    userId: session.user.id,
   },
 });
 

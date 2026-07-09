@@ -7,15 +7,17 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(cuid())
-  name          String?
-  email         String?  @unique
-  currentRoleId String?
-  totalXp       Int      @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(cuid())
+  name         String?
+  email        String   @unique
+  passwordHash String?
+  points       Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  currentRole Role?          @relation(fields: [currentRoleId], references: [id])
+  roleId String?
+  role   Role?   @relation(fields: [roleId], references: [id])
+
   submissions Submission[]
   progress    UserProgress[]
 }
