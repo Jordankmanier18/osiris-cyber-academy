@@ -36,7 +36,7 @@ export default async function MissionsPage() {
 
                 <div className="text-right text-sm">
                   <p className="font-medium">{mission.difficulty}</p>
-                  <p className="text-muted-foreground">{mission.points} pts</p>
+                  <p className="text-muted-foreground">{mission.xpReward} XP</p>
                 </div>
               </div>
             </Link>

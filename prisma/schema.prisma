@@ -35,10 +35,48 @@ model Role {
   createdAt     DateTime @default(now())
 
   users    User[]
+  courses  Course[]
   missions Mission[]
   lessons  Lesson[]
   labs     Lab[]
   tickets  Ticket[]
+}
+
+model Course {
+  id             String   @id @default(cuid())
+  title          String
+  slug           String   @unique
+  description    String
+  certification  String?
+  roleId         String
+  difficulty     String   @default("beginner")
+  estimatedHours Int?
+  order          Int      @default(0)
+  isPublished    Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  role    Role     @relation(fields: [roleId], references: [id])
+  modules Module[]
+
+  @@unique([roleId, order])
+}
+
+model Module {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String
+  courseId    String
+  order       Int      @default(0)
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  course  Course   @relation(fields: [courseId], references: [id])
+  lessons Lesson[]
+
+  @@unique([courseId, order])
 }
 
 model Lesson {
@@ -48,13 +86,38 @@ model Lesson {
   description String
   content     String
   roleId      String
+  moduleId    String?
   difficulty  String
   xpReward    Int      @default(10)
   order       Int      @default(0)
   createdAt   DateTime @default(now())
 
-  role     Role           @relation(fields: [roleId], references: [id])
-  progress UserProgress[]
+  role          Role           @relation(fields: [roleId], references: [id])
+  module        Module?        @relation(fields: [moduleId], references: [id])
+  progress      UserProgress[]
+  quizQuestions QuizQuestion[]
+}
+
+model QuizQuestion {
+  id          String   @id @default(cuid())
+  lessonId    String
+  question    String
+  explanation String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  lesson  Lesson       @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  choices QuizChoice[]
+}
+
+model QuizChoice {
+  id         String  @id @default(cuid())
+  questionId String
+  text       String
+  isCorrect  Boolean @default(false)
+  order      Int     @default(0)
+
+  question QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
 }
 
 model Mission {

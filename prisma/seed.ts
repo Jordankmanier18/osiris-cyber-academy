@@ -13,11 +13,15 @@ const prisma = new PrismaClient({
 async function main() {
   console.log("Seeding Osiris Cyber Academy data...");
 
+  await prisma.quizChoice.deleteMany();
+  await prisma.quizQuestion.deleteMany();
   await prisma.userProgress.deleteMany();
   await prisma.submission.deleteMany();
   await prisma.ticket.deleteMany();
   await prisma.lab.deleteMany();
   await prisma.lesson.deleteMany();
+  await prisma.module.deleteMany();
+  await prisma.course.deleteMany();
   await prisma.mission.deleteMany();
   await prisma.user.deleteMany();
   await prisma.role.deleteMany();
@@ -92,12 +96,99 @@ async function main() {
     },
   });
 
+  const techPlusCourse = await prisma.course.create({
+    data: {
+      title: "Cyber Cadet: CompTIA Tech+",
+      slug: "cyber-cadet-comptia-tech-plus",
+      description:
+        "A beginner-friendly course covering computer hardware, software, operating systems, networking, databases, cybersecurity, and basic IT troubleshooting.",
+      certification: "CompTIA Tech+",
+      roleId: cyberCadet.id,
+      difficulty: "Beginner",
+      estimatedHours: 40,
+      order: 1,
+      isPublished: true,
+    },
+  });
+
+  const techFoundationsModule = await prisma.module.create({
+    data: {
+      title: "Technology Foundations",
+      slug: "technology-foundations",
+      description:
+        "Learn how Osiris Cyber Academy works and understand the foundational concepts of computers and information technology.",
+      courseId: techPlusCourse.id,
+      order: 1,
+      isPublished: true,
+    },
+  });
+
+  const computerHardwareModule = await prisma.module.create({
+    data: {
+      title: "Computer Hardware",
+      slug: "computer-hardware",
+      description:
+        "Learn about processors, memory, storage, motherboards, peripherals, ports, and common computing devices.",
+      courseId: techPlusCourse.id,
+      order: 2,
+      isPublished: true,
+    },
+  });
+
+  const operatingSystemsModule = await prisma.module.create({
+    data: {
+      title: "Operating Systems and Software",
+      slug: "operating-systems-and-software",
+      description:
+        "Understand operating systems, applications, file systems, software installation, and basic system configuration.",
+      courseId: techPlusCourse.id,
+      order: 3,
+      isPublished: true,
+    },
+  });
+
+  const networkingModule = await prisma.module.create({
+    data: {
+      title: "Networking and Internet Fundamentals",
+      slug: "networking-and-internet-fundamentals",
+      description:
+        "Learn how devices communicate through networks using IP addresses, routers, switches, DNS, DHCP, and internet services.",
+      courseId: techPlusCourse.id,
+      order: 4,
+      isPublished: true,
+    },
+  });
+
+  const cybersecurityModule = await prisma.module.create({
+    data: {
+      title: "Cybersecurity Fundamentals",
+      slug: "cybersecurity-fundamentals",
+      description:
+        "Learn foundational security concepts, common threats, account protection, safe computing, and data protection.",
+      courseId: techPlusCourse.id,
+      order: 5,
+      isPublished: true,
+    },
+  });
+
+  const troubleshootingModule = await prisma.module.create({
+    data: {
+      title: "IT Troubleshooting and Support",
+      slug: "it-troubleshooting-and-support",
+      description:
+        "Practice structured troubleshooting, user communication, documentation, and basic workplace support procedures.",
+      courseId: techPlusCourse.id,
+      order: 6,
+      isPublished: true,
+    },
+  });
+
   await prisma.user.create({
     data: {
       name: "Jordan Manier",
       email: "jordan@osiris.local",
       roleId: cyberCadet.id,
-      totalXp: 0,
+      points: 0,
     },
   });
 
@@ -111,6 +202,7 @@ async function main() {
         content:
           "Welcome to Osiris Cyber Academy. You will progress through cybersecurity roles by completing lessons, labs, missions, and workplace tickets.",
         roleId: cyberCadet.id,
+        moduleId: techFoundationsModule.id,
         difficulty: "Beginner",
         xpReward: 10,
         order: 1,
@@ -123,9 +215,10 @@ async function main() {
         content:
           "A computer is a system that receives input, processes data, stores information, and produces output.",
         roleId: cyberCadet.id,
+        moduleId: computerHardwareModule.id,
         difficulty: "Beginner",
         xpReward: 10,
-        order: 2,
+        order: 1,
       },
       {
         title: "Operating Systems Explained",
@@ -135,9 +228,49 @@ async function main() {
         content:
           "An operating system manages hardware, applications, files, users, permissions, and system resources.",
         roleId: cyberCadet.id,
+        moduleId: operatingSystemsModule.id,
         difficulty: "Beginner",
         xpReward: 10,
-        order: 3,
+        order: 1,
+      },
+      {
+        title: "Networking Fundamentals",
+        slug: "networking-fundamentals",
+        description:
+          "Learn the basics of networks, IP addresses, routers, switches, DNS, DHCP, and internet connectivity.",
+        content:
+          "A network connects devices so they can communicate, share resources, and access services.",
+        roleId: cyberCadet.id,
+        moduleId: networkingModule.id,
+        difficulty: "Beginner",
+        xpReward: 10,
+        order: 1,
+      },
+      {
+        title: "Cybersecurity Fundamentals",
+        slug: "cybersecurity-fundamentals",
+        description:
+          "Learn the purpose of cybersecurity and the concepts of confidentiality, integrity, and availability.",
+        content:
+          "Cybersecurity protects systems, networks, applications, users, and data from unauthorized access, misuse, disruption, and damage.",
+        roleId: cyberCadet.id,
+        moduleId: cybersecurityModule.id,
+        difficulty: "Beginner",
+        xpReward: 10,
+        order: 1,
+      },
+      {
+        title: "Introduction to IT Troubleshooting",
+        slug: "introduction-to-it-troubleshooting",
+        description:
+          "Learn a structured troubleshooting process for identifying, testing, resolving, and documenting technical problems.",
+        content:
+          "Effective troubleshooting starts by identifying the problem, gathering information, testing likely causes, applying a solution, and documenting the result.",
+        roleId: cyberCadet.id,
+        moduleId: troubleshootingModule.id,
+        difficulty: "Beginner",
+        xpReward: 10,
+        order: 1,
       },
       {
         title: "What Is a Network?",
@@ -177,6 +310,137 @@ async function main() {
       },
     ],
   });
+
+  const quizLessons = await prisma.lesson.findMany({
+    where: {
+      slug: {
+        in: [
+          "welcome-to-osiris-cyber-academy",
+          "what-is-a-computer",
+          "operating-systems-explained",
+          "networking-fundamentals",
+          "cybersecurity-fundamentals",
+          "introduction-to-it-troubleshooting",
+        ],
+      },
+    },
+    select: {
+      id: true,
+      slug: true,
+    },
+  });
+
+  const lessonIdBySlug = new Map(
+    quizLessons.map((lesson) => [lesson.slug, lesson.id]),
+  );
+
+  const quizData = [
+    {
+      lessonSlug: "welcome-to-osiris-cyber-academy",
+      question:
+        "Which activity gives students hands-on practice in Osiris Cyber Academy?",
+      explanation:
+        "Labs provide hands-on practice, while lessons teach concepts, missions test scenarios, and tickets simulate workplace requests.",
+      choices: [
+        { text: "Lessons", isCorrect: false },
+        { text: "Labs", isCorrect: true },
+        { text: "Role descriptions", isCorrect: false },
+        { text: "Account settings", isCorrect: false },
+      ],
+    },
+    {
+      lessonSlug: "what-is-a-computer",
+      question:
+        "Which component temporarily stores data that the computer is actively using?",
+      explanation:
+        "RAM temporarily stores active data and instructions so the processor can access them quickly.",
+      choices: [
+        { text: "RAM", isCorrect: true },
+        { text: "Power supply", isCorrect: false },
+        { text: "Monitor", isCorrect: false },
+        { text: "Keyboard", isCorrect: false },
+      ],
+    },
+    {
+      lessonSlug: "operating-systems-explained",
+      question: "What is a primary responsibility of an operating system?",
+      explanation:
+        "The operating system manages hardware, applications, files, users, permissions, and system resources.",
+      choices: [
+        { text: "Manufacturing computer hardware", isCorrect: false },
+        {
+          text: "Managing hardware and software resources",
+          isCorrect: true,
+        },
+        { text: "Replacing the internet connection", isCorrect: false },
+        { text: "Creating physical storage devices", isCorrect: false },
+      ],
+    },
+    {
+      lessonSlug: "networking-fundamentals",
+      question: "What is the purpose of a network?",
+      explanation:
+        "A network allows devices to communicate, share resources, and access services.",
+      choices: [
+        {
+          text: "To connect devices so they can communicate",
+          isCorrect: true,
+        },
+        { text: "To replace all computer storage", isCorrect: false },
+        { text: "To remove operating systems", isCorrect: false },
+        { text: "To prevent all software updates", isCorrect: false },
+      ],
+    },
+    {
+      lessonSlug: "cybersecurity-fundamentals",
+      question:
+        "Which security principle focuses on preventing unauthorized disclosure of information?",
+      explanation:
+        "Confidentiality protects information from unauthorized access or disclosure.",
+      choices: [
+        { text: "Availability", isCorrect: false },
+        { text: "Confidentiality", isCorrect: true },
+        { text: "Performance", isCorrect: false },
+        { text: "Scalability", isCorrect: false },
+      ],
+    },
+    {
+      lessonSlug: "introduction-to-it-troubleshooting",
+      question: "What should you do first when troubleshooting a problem?",
+      explanation:
+        "The first step is to identify the problem and gather enough information to understand the symptoms.",
+      choices: [
+        { text: "Replace the device immediately", isCorrect: false },
+        { text: "Identify the problem", isCorrect: true },
+        { text: "Delete the user account", isCorrect: false },
+        { text: "Ignore the symptoms", isCorrect: false },
+      ],
+    },
+  ];
+
+  for (const quiz of quizData) {
+    const lessonId = lessonIdBySlug.get(quiz.lessonSlug);
+
+    if (!lessonId) {
+      throw new Error(`Lesson not found for quiz: ${quiz.lessonSlug}`);
+    }
+
+    await prisma.quizQuestion.create({
+      data: {
+        lessonId,
+        question: quiz.question,
+        explanation: quiz.explanation,
+        order: 1,
+        choices: {
+          create: quiz.choices.map((choice, index) => ({
+            text: choice.text,
+            isCorrect: choice.isCorrect,
+            order: index + 1,
+          })),
+        },
+      },
+    });
+  }
 
   await prisma.lab.createMany({
     data: [

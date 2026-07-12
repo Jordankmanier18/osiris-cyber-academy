@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 
-export async function signupAction(formData: FormData) {
+export async function signupAction(formData: FormData): Promise<void> {
   const name = String(formData.get("name") || "").trim();
   const email = String(formData.get("email") || "").trim().toLowerCase();
   const password = String(formData.get("password") || "");
@@ -27,6 +27,18 @@ export async function signupAction(formData: FormData) {
     throw new Error("An account already exists with this email.");
   }
 
+  const cyberCadetRole = await prisma.role.findUnique({
+    where: {
+      slug: "cyber-cadet",
+    },
+  });
+
+  if (!cyberCadetRole) {
+    throw new Error(
+      "The Cyber Cadet role is not available. Run the database seed first.",
+    );
+  }
+
   const passwordHash = await bcrypt.hash(password, 12);
 
   await prisma.user.create({
@@ -34,6 +46,8 @@ export async function signupAction(formData: FormData) {
       name,
       email,
       passwordHash,
+      points: 0,
+      roleId: cyberCadetRole.id,
     },
   });
 

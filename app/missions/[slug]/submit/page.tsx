@@ -9,35 +9,23 @@ async function submitMission(formData: FormData) {
   const missionId = formData.get("missionId") as string;
   const answer = formData.get("answer") as string;
 
-  if (!missionId || !answer) {
+  if (!missionId || !answer.trim()) {
     throw new Error("Mission ID and answer are required.");
   }
 
-  const demoProfile = await prisma.profile.upsert({
-  where: {
-    email: "demo@student.osiris.local",
-  },
-  update: {},
-  create: {
-    email: "demo@student.osiris.local",
-    fullName: "Demo Student",
-    role: "STUDENT",
-  },
-});
+  const session = await auth();
 
-const session = await auth();
+  if (!session?.user?.id) {
+    redirect("/login");
+  }
 
-if (!session?.user) {
-  redirect("/login");
-}
-
-await prisma.submission.create({
-  data: {
-    answer,
-    missionId: mission.id,
-    userId: session.user.id,
-  },
-});
+  await prisma.submission.create({
+    data: {
+      answer: answer.trim(),
+      missionId,
+      userId: session.user.id,
+    },
+  });
 
   redirect("/missions");
 }
@@ -49,7 +37,7 @@ export default async function MissionSubmitPage({
 }) {
   const { slug } = await params;
 
-  const mission = await prisma.mission.findFirst({
+  const mission = await prisma.mission.findUnique({
     where: {
       slug,
     },
@@ -59,9 +47,11 @@ export default async function MissionSubmitPage({
     return (
       <div className="space-y-4">
         <h1 className="text-2xl font-bold">Mission Not Found</h1>
+
         <p className="text-muted-foreground">
           We could not find this mission.
         </p>
+
         <Link href="/missions" className="underline">
           Back to Missions
         </Link>
@@ -85,12 +75,16 @@ export default async function MissionSubmitPage({
         </p>
       </div>
 
-      <form action={submitMission} className="rounded-lg border p-6 space-y-4">
+      <form action={submitMission} className="space-y-4 rounded-lg border p-6">
         <input type="hidden" name="missionId" value={mission.id} />
 
         <div>
-          <label className="text-sm font-medium">Submission</label>
+          <label htmlFor="answer" className="text-sm font-medium">
+            Submission
+          </label>
+
           <textarea
+            id="answer"
             name="answer"
             required
             className="mt-2 min-h-32 w-full rounded-md border bg-background p-3 text-sm"

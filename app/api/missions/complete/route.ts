@@ -1,11 +1,21 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 
 export async function POST(request: Request) {
   try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "You must be logged in to complete a mission." },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
 
-    const missionId = body.missionId;
+    const missionId = String(body.missionId || "").trim();
     const submittedAnswer = String(body.answer || "").trim();
 
     if (!missionId || !submittedAnswer) {
@@ -28,35 +38,35 @@ export async function POST(request: Request) {
       );
     }
 
-    const correctAnswer = String(mission.flag || "").trim();
+    const correctAnswer = String(mission.expectedAnswer || "").trim();
 
     if (!correctAnswer) {
       return NextResponse.json(
-        { error: "This mission does not have a correct answer set yet." },
+        { error: "This mission does not have an expected answer set yet." },
         { status: 400 }
       );
     }
 
-    if (submittedAnswer.toLowerCase() !== correctAnswer.toLowerCase()) {
+    const isCorrect =
+      submittedAnswer.toLowerCase() === correctAnswer.toLowerCase();
+
+    if (!isCorrect) {
       return NextResponse.json(
-        { error: "That answer is not correct yet. Try again." },
+        {
+          error:
+            "That answer does not match the expected answer. Review the mission and try again.",
+        },
         { status: 400 }
-      );
-    }
-
-    const profile = await prisma.profile.findFirst();
-
-    if (!profile) {
-      return NextResponse.json(
-        { error: "Student profile not found." },
-        { status: 404 }
       );
     }
 
     const existingSubmission = await prisma.submission.findFirst({
       where: {
         missionId: mission.id,
-        profileId: profile.id,
+        userId: session.user.id,
+        score: {
+          gt: 0,
+        },
       },
     });
 
@@ -64,6 +74,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success: true,
         message: "Mission already completed.",
+        xpAwarded: 0,
       });
     }
 
@@ -71,18 +82,20 @@ export async function POST(request: Request) {
       prisma.submission.create({
         data: {
           missionId: mission.id,
-          profileId: profile.id,
+          userId: session.user.id,
           answer: submittedAnswer,
-          isCorrect: true,
+          score: 100,
+          feedback: "Correct answer. Mission completed successfully.",
         },
       }),
-      prisma.profile.update({
+
+      prisma.user.update({
         where: {
-          id: profile.id,
+          id: session.user.id,
         },
         data: {
-          xp: {
-            increment: mission.points,
+          points: {
+            increment: mission.xpReward,
           },
         },
       }),
@@ -91,10 +104,10 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       message: "Mission completed.",
-      xpAwarded: mission.points,
+      xpAwarded: mission.xpReward,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Mission completion error:", error);
 
     return NextResponse.json(
       { error: "Failed to complete mission." },
