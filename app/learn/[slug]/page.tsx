@@ -22,19 +22,42 @@ async function submitQuiz(formData: FormData): Promise<void> {
     redirect(`/learn/${lessonSlug}?quiz=missing-answer`);
   }
 
-  const lesson = await prisma.lesson.findUnique({
-    where: {
-      id: lessonId,
-    },
-    select: {
-      id: true,
-      slug: true,
-      xpReward: true,
-    },
-  });
+  const [lesson, user] = await Promise.all([
+    prisma.lesson.findUnique({
+      where: {
+        id: lessonId,
+      },
+      select: {
+        id: true,
+        slug: true,
+        xpReward: true,
+        role: {
+          select: {
+            level: true,
+          },
+        },
+      },
+    }),
+    prisma.user.findUnique({
+      where: {
+        id: session.user.id,
+      },
+      select: {
+        role: {
+          select: {
+            level: true,
+          },
+        },
+      },
+    }),
+  ]);
 
   if (!lesson || lesson.slug !== lessonSlug) {
     throw new Error("Lesson not found.");
+  }
+
+  if (!user?.role || user.role.level < lesson.role.level) {
+    redirect("/learn");
   }
 
   const choice = await prisma.quizChoice.findFirst({
@@ -125,40 +148,58 @@ export default async function LessonPage({
   const { slug } = await params;
   const { quiz } = await searchParams;
 
-  const lesson = await prisma.lesson.findUnique({
-    where: {
-      slug,
-    },
-    include: {
-      role: true,
-      module: {
-        include: {
-          course: true,
-        },
+  const [lesson, user] = await Promise.all([
+    prisma.lesson.findUnique({
+      where: {
+        slug,
       },
-      progress: {
-        where: {
-          userId: session.user.id,
-          status: "completed",
+      include: {
+        role: true,
+        module: {
+          include: {
+            course: true,
+          },
         },
-        take: 1,
-      },
-      quizQuestions: {
-        orderBy: {
-          order: "asc",
+        progress: {
+          where: {
+            userId: session.user.id,
+            status: "completed",
+          },
+          take: 1,
         },
-        include: {
-          choices: {
-            orderBy: {
-              order: "asc",
+        quizQuestions: {
+          orderBy: {
+            order: "asc",
+          },
+          include: {
+            choices: {
+              orderBy: {
+                order: "asc",
+              },
             },
           },
         },
       },
-    },
-  });
+    }),
+    prisma.user.findUnique({
+      where: {
+        id: session.user.id,
+      },
+      select: {
+        role: {
+          select: {
+            level: true,
+          },
+        },
+      },
+    }),
+  ]);
 
   if (!lesson) {
+    notFound();
+  }
+
+  if (!user?.role || user.role.level < lesson.role.level) {
     notFound();
   }
 
@@ -169,7 +210,7 @@ export default async function LessonPage({
     <div className="space-y-8">
       <section className="osiris-panel p-8">
         <Link
-          href="/learn"
+          href={`/learn?district=${lesson.role.slug}`}
           className="text-sm font-medium text-yellow-400 hover:text-yellow-300"
         >
           ← Back to Learning Path

@@ -1,6 +1,7 @@
 import "dotenv/config";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, type Prisma } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { trainingCityCurriculum } from "./training-city-curriculum";
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL!,
@@ -96,92 +97,52 @@ async function main() {
     },
   });
 
-  const techPlusCourse = await prisma.course.create({
-    data: {
-      title: "Cyber Cadet: CompTIA Tech+",
-      slug: "cyber-cadet-comptia-tech-plus",
-      description:
-        "A beginner-friendly course covering computer hardware, software, operating systems, networking, databases, cybersecurity, and basic IT troubleshooting.",
-      certification: "CompTIA Tech+",
-      roleId: cyberCadet.id,
-      difficulty: "Beginner",
-      estimatedHours: 40,
-      order: 1,
-      isPublished: true,
-    },
-  });
+  const roleIdBySlug = new Map([
+    [cyberCadet.slug, cyberCadet.id],
+    [itSupportTrainee.slug, itSupportTrainee.id],
+    [networkSupportTrainee.slug, networkSupportTrainee.id],
+    [securityTrainee.slug, securityTrainee.id],
+    [juniorSecurityAnalyst.slug, juniorSecurityAnalyst.id],
+  ]);
 
-  const techFoundationsModule = await prisma.module.create({
-    data: {
-      title: "Technology Foundations",
-      slug: "technology-foundations",
-      description:
-        "Learn how Osiris Cyber Academy works and understand the foundational concepts of computers and information technology.",
-      courseId: techPlusCourse.id,
-      order: 1,
-      isPublished: true,
-    },
-  });
+  const lessonSeedData: Prisma.LessonCreateManyInput[] = [];
 
-  const computerHardwareModule = await prisma.module.create({
-    data: {
-      title: "Computer Hardware",
-      slug: "computer-hardware",
-      description:
-        "Learn about processors, memory, storage, motherboards, peripherals, ports, and common computing devices.",
-      courseId: techPlusCourse.id,
-      order: 2,
-      isPublished: true,
-    },
-  });
+  for (const district of trainingCityCurriculum) {
+    const roleId = roleIdBySlug.get(district.roleSlug);
 
-  const operatingSystemsModule = await prisma.module.create({
-    data: {
-      title: "Operating Systems and Software",
-      slug: "operating-systems-and-software",
-      description:
-        "Understand operating systems, applications, file systems, software installation, and basic system configuration.",
-      courseId: techPlusCourse.id,
-      order: 3,
-      isPublished: true,
-    },
-  });
+    if (!roleId) {
+      throw new Error(`Role not found for curriculum: ${district.roleSlug}`);
+    }
 
-  const networkingModule = await prisma.module.create({
-    data: {
-      title: "Networking and Internet Fundamentals",
-      slug: "networking-and-internet-fundamentals",
-      description:
-        "Learn how devices communicate through networks using IP addresses, routers, switches, DNS, DHCP, and internet services.",
-      courseId: techPlusCourse.id,
-      order: 4,
-      isPublished: true,
-    },
-  });
+    const course = await prisma.course.create({
+      data: {
+        ...district.course,
+        roleId,
+        isPublished: true,
+      },
+    });
 
-  const cybersecurityModule = await prisma.module.create({
-    data: {
-      title: "Cybersecurity Fundamentals",
-      slug: "cybersecurity-fundamentals",
-      description:
-        "Learn foundational security concepts, common threats, account protection, safe computing, and data protection.",
-      courseId: techPlusCourse.id,
-      order: 5,
-      isPublished: true,
-    },
-  });
+    for (const curriculumModule of district.modules) {
+      const moduleRecord = await prisma.module.create({
+        data: {
+          title: curriculumModule.title,
+          slug: curriculumModule.slug,
+          description: curriculumModule.description,
+          order: curriculumModule.order,
+          courseId: course.id,
+          isPublished: true,
+        },
+      });
 
-  const troubleshootingModule = await prisma.module.create({
-    data: {
-      title: "IT Troubleshooting and Support",
-      slug: "it-troubleshooting-and-support",
-      description:
-        "Practice structured troubleshooting, user communication, documentation, and basic workplace support procedures.",
-      courseId: techPlusCourse.id,
-      order: 6,
-      isPublished: true,
-    },
-  });
+      for (const lesson of curriculumModule.lessons) {
+        lessonSeedData.push({
+          ...lesson,
+          roleId,
+          moduleId: moduleRecord.id,
+        });
+      }
+    }
+  }
 
   await prisma.user.create({
     data: {
@@ -193,122 +154,7 @@ async function main() {
   });
 
   await prisma.lesson.createMany({
-    data: [
-      {
-        title: "Welcome to Osiris Cyber Academy",
-        slug: "welcome-to-osiris-cyber-academy",
-        description:
-          "Learn how the platform works, how roles unlock, and how missions, labs, lessons, and tickets fit together.",
-        content:
-          "Welcome to Osiris Cyber Academy. You will progress through cybersecurity roles by completing lessons, labs, missions, and workplace tickets.",
-        roleId: cyberCadet.id,
-        moduleId: techFoundationsModule.id,
-        difficulty: "Beginner",
-        xpReward: 10,
-        order: 1,
-      },
-      {
-        title: "What Is a Computer?",
-        slug: "what-is-a-computer",
-        description:
-          "Understand the basic parts of a computer, including CPU, RAM, storage, operating systems, applications, and users.",
-        content:
-          "A computer is a system that receives input, processes data, stores information, and produces output.",
-        roleId: cyberCadet.id,
-        moduleId: computerHardwareModule.id,
-        difficulty: "Beginner",
-        xpReward: 10,
-        order: 1,
-      },
-      {
-        title: "Operating Systems Explained",
-        slug: "operating-systems-explained",
-        description:
-          "Learn what operating systems do and how Windows, Linux, and macOS help users interact with hardware and software.",
-        content:
-          "An operating system manages hardware, applications, files, users, permissions, and system resources.",
-        roleId: cyberCadet.id,
-        moduleId: operatingSystemsModule.id,
-        difficulty: "Beginner",
-        xpReward: 10,
-        order: 1,
-      },
-      {
-        title: "Networking Fundamentals",
-        slug: "networking-fundamentals",
-        description:
-          "Learn the basics of networks, IP addresses, routers, switches, DNS, DHCP, and internet connectivity.",
-        content:
-          "A network connects devices so they can communicate, share resources, and access services.",
-        roleId: cyberCadet.id,
-        moduleId: networkingModule.id,
-        difficulty: "Beginner",
-        xpReward: 10,
-        order: 1,
-      },
-      {
-        title: "Cybersecurity Fundamentals",
-        slug: "cybersecurity-fundamentals",
-        description:
-          "Learn the purpose of cybersecurity and the concepts of confidentiality, integrity, and availability.",
-        content:
-          "Cybersecurity protects systems, networks, applications, users, and data from unauthorized access, misuse, disruption, and damage.",
-        roleId: cyberCadet.id,
-        moduleId: cybersecurityModule.id,
-        difficulty: "Beginner",
-        xpReward: 10,
-        order: 1,
-      },
-      {
-        title: "Introduction to IT Troubleshooting",
-        slug: "introduction-to-it-troubleshooting",
-        description:
-          "Learn a structured troubleshooting process for identifying, testing, resolving, and documenting technical problems.",
-        content:
-          "Effective troubleshooting starts by identifying the problem, gathering information, testing likely causes, applying a solution, and documenting the result.",
-        roleId: cyberCadet.id,
-        moduleId: troubleshootingModule.id,
-        difficulty: "Beginner",
-        xpReward: 10,
-        order: 1,
-      },
-      {
-        title: "What Is a Network?",
-        slug: "what-is-a-network",
-        description:
-          "Learn the basics of networks, IP addresses, routers, switches, DNS, DHCP, and internet connectivity.",
-        content:
-          "A network connects devices so they can communicate, share resources, and access services.",
-        roleId: networkSupportTrainee.id,
-        difficulty: "Beginner",
-        xpReward: 15,
-        order: 1,
-      },
-      {
-        title: "Introduction to Cybersecurity",
-        slug: "introduction-to-cybersecurity",
-        description:
-          "Learn the purpose of cybersecurity and the concepts of confidentiality, integrity, and availability.",
-        content:
-          "Cybersecurity protects systems, networks, applications, users, and data from unauthorized access, misuse, disruption, and damage.",
-        roleId: securityTrainee.id,
-        difficulty: "Beginner",
-        xpReward: 15,
-        order: 1,
-      },
-      {
-        title: "Introduction to SOC Operations",
-        slug: "introduction-to-soc-operations",
-        description:
-          "Learn what a Security Operations Center does and how analysts monitor, triage, escalate, and document alerts.",
-        content:
-          "A SOC is responsible for monitoring security events, investigating alerts, escalating incidents, and helping defend the organization.",
-        roleId: juniorSecurityAnalyst.id,
-        difficulty: "Beginner",
-        xpReward: 20,
-        order: 1,
-      },
-    ],
+    data: lessonSeedData,
   });
 
   const quizLessons = await prisma.lesson.findMany({
