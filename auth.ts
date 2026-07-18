@@ -64,11 +64,26 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.id = user.id;
       }
 
+      if (!token.id && token.email) {
+        const existingUser = await prisma.user.findUnique({
+          where: {
+            email: token.email.toLowerCase(),
+          },
+          select: {
+            id: true,
+          },
+        });
+
+        if (existingUser) {
+          token.id = existingUser.id;
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string;
+      if (session.user && typeof token.id === "string") {
+        session.user.id = token.id;
       }
 
       return session;

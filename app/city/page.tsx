@@ -14,7 +14,7 @@ export default async function CityPage() {
   const session = await auth();
 
   if (!session?.user?.id) {
-    redirect("/login");
+    redirect("/login?callbackUrl=/city");
   }
 
   const user = await prisma.user.findUnique({
@@ -41,7 +41,7 @@ export default async function CityPage() {
   });
 
   if (!user) {
-    redirect("/login");
+    redirect("/login?callbackUrl=/city");
   }
 
   return (

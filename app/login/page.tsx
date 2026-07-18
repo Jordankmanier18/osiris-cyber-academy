@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { loginAction } from "./actions";
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string }>;
+}) {
+  const { callbackUrl = "/dashboard" } = await searchParams;
+
   return (
     <main className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md rounded-xl border bg-card p-6 shadow-sm">
@@ -11,6 +17,7 @@ export default function LoginPage() {
         </p>
 
         <form action={loginAction} className="mt-6 space-y-4">
+          <input type="hidden" name="callbackUrl" value={callbackUrl} />
           <div>
             <label className="text-sm font-medium">Email</label>
             <input
