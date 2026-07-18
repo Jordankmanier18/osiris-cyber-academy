@@ -23,6 +23,14 @@ export default async function CityPage() {
       name: true,
       email: true,
       points: true,
+      cityProgress: {
+        select: {
+          missionKey: true,
+          status: true,
+          attemptCount: true,
+          bestScore: true,
+        },
+      },
       role: {
         select: {
           name: true,
@@ -42,6 +50,7 @@ export default async function CityPage() {
       roleName={user.role?.name ?? "Academy Recruit"}
       roleLevel={user.role?.level ?? 1}
       academyXp={user.points}
+      initialProgress={user.cityProgress}
     />
   );
 }

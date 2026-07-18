@@ -18,8 +18,9 @@ model User {
   roleId String?
   role   Role?   @relation(fields: [roleId], references: [id])
 
-  submissions Submission[]
-  progress    UserProgress[]
+  submissions  Submission[]
+  progress     UserProgress[]
+  cityProgress TrainingCityProgress[]
 }
 
 model Role {
@@ -197,4 +198,28 @@ model UserProgress {
   lesson Lesson? @relation(fields: [lessonId], references: [id])
   lab    Lab?    @relation(fields: [labId], references: [id])
   ticket Ticket? @relation(fields: [ticketId], references: [id])
+}
+
+model TrainingCityProgress {
+  id                 String    @id @default(cuid())
+  userId             String
+  missionKey         String
+  status             String    @default("not_started")
+  attemptCount       Int       @default(0)
+  failedAttemptCount Int       @default(0)
+  bestScore          Int       @default(0)
+  secureScore        Int       @default(25)
+  controlsApplied    Json
+  lastAttackResult   String?
+  reflection         String?
+  xpAwarded          Int       @default(0)
+  lastAttemptAt      DateTime?
+  completedAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, missionKey])
+  @@index([userId, status])
 }
