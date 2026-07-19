@@ -52,7 +52,7 @@ export const capstoneTickets: readonly CapstoneTicketDefinition[] = [
       "cybersecurity-fundamentals",
       "introduction-to-it-troubleshooting",
     ],
-    passingScore: 80,
+    passingScore: 100,
     xpReward: 40,
     riskOptions: [
       {
@@ -201,7 +201,12 @@ export function scoreCapstoneResponse(
     (total, criterionScore) => total + criterionScore,
     0,
   );
-  const passed = score >= definition.passingScore && hasAllRequiredControls;
+  const passed =
+    score >= definition.passingScore &&
+    criteria.risk === 20 &&
+    hasAllRequiredControls &&
+    hasAllValidationSteps &&
+    noteIsComplete;
   const feedback: string[] = [];
 
   if (criteria.risk === 0) {

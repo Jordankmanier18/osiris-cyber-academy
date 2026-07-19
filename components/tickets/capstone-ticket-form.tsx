@@ -256,7 +256,7 @@ export function CapstoneTicketForm({
             </h2>
             <p className="mt-2 text-sm leading-6 text-zinc-500">
               Name the affected service, the remediation outcome, and how
-              monitoring was verified. Minimum 50 characters.
+              monitoring was verified. Minimum 80 characters.
             </p>
           </div>
         </div>
@@ -267,7 +267,7 @@ export function CapstoneTicketForm({
           id="closureNote"
           name="closureNote"
           required
-          minLength={50}
+          minLength={80}
           maxLength={1500}
           className="osiris-input osiris-textarea mt-5"
           placeholder="Reviewed the Payroll App Server SSH exposure..."
@@ -340,7 +340,7 @@ export function CapstoneTicketForm({
             Passing standard
           </p>
           <p className="mt-1 text-sm font-bold text-white">
-            {definition.passingScore}% and all critical controls
+            {definition.passingScore}% with every required section complete
           </p>
         </div>
         <button

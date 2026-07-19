@@ -1,3 +1,5 @@
+import { apprenticeLessonContent } from "./apprentice-lessons";
+
 export type CurriculumLesson = {
   title: string;
   slug: string;
@@ -56,8 +58,7 @@ export const trainingCityCurriculum: readonly DistrictCurriculum[] = [
             slug: "welcome-to-osiris-cyber-academy",
             description:
               "Learn how the platform works, how roles unlock, and how missions, labs, lessons, and tickets fit together.",
-            content:
-              "Welcome to Osiris Cyber Academy. You will progress through cybersecurity roles by completing lessons, labs, missions, and workplace tickets.",
+            content: apprenticeLessonContent["welcome-to-osiris-cyber-academy"],
             difficulty: "Beginner",
             xpReward: 10,
             order: 1,
@@ -76,8 +77,7 @@ export const trainingCityCurriculum: readonly DistrictCurriculum[] = [
             slug: "what-is-a-computer",
             description:
               "Understand the basic parts of a computer, including CPU, RAM, storage, operating systems, applications, and users.",
-            content:
-              "A computer is a system that receives input, processes data, stores information, and produces output.",
+            content: apprenticeLessonContent["what-is-a-computer"],
             difficulty: "Beginner",
             xpReward: 10,
             order: 1,
@@ -96,8 +96,7 @@ export const trainingCityCurriculum: readonly DistrictCurriculum[] = [
             slug: "operating-systems-explained",
             description:
               "Learn what operating systems do and how Windows, Linux, and macOS help users interact with hardware and software.",
-            content:
-              "An operating system manages hardware, applications, files, users, permissions, and system resources.",
+            content: apprenticeLessonContent["operating-systems-explained"],
             difficulty: "Beginner",
             xpReward: 10,
             order: 1,
@@ -116,8 +115,7 @@ export const trainingCityCurriculum: readonly DistrictCurriculum[] = [
             slug: "networking-fundamentals",
             description:
               "Learn the basics of networks, IP addresses, routers, switches, DNS, DHCP, and internet connectivity.",
-            content:
-              "A network connects devices so they can communicate, share resources, and access services.",
+            content: apprenticeLessonContent["networking-fundamentals"],
             difficulty: "Beginner",
             xpReward: 10,
             order: 1,
@@ -136,8 +134,7 @@ export const trainingCityCurriculum: readonly DistrictCurriculum[] = [
             slug: "cybersecurity-fundamentals",
             description:
               "Learn the purpose of cybersecurity and the concepts of confidentiality, integrity, and availability.",
-            content:
-              "Cybersecurity protects systems, networks, applications, users, and data from unauthorized access, misuse, disruption, and damage.",
+            content: apprenticeLessonContent["cybersecurity-fundamentals"],
             difficulty: "Beginner",
             xpReward: 10,
             order: 1,
@@ -157,7 +154,7 @@ export const trainingCityCurriculum: readonly DistrictCurriculum[] = [
             description:
               "Learn a structured troubleshooting process for identifying, testing, resolving, and documenting technical problems.",
             content:
-              "Effective troubleshooting starts by identifying the problem, gathering information, testing likely causes, applying a solution, and documenting the result.",
+              apprenticeLessonContent["introduction-to-it-troubleshooting"],
             difficulty: "Beginner",
             xpReward: 10,
             order: 1,

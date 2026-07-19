@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
+import { getCapstoneByRole } from "@/lib/capstone-tickets";
 import { prisma } from "@/lib/prisma";
 import { lockUserForProgression } from "@/lib/progression";
 
@@ -16,11 +17,9 @@ async function submitQuiz(formData: FormData): Promise<void> {
 
   const lessonId = String(formData.get("lessonId") || "").trim();
   const lessonSlug = String(formData.get("lessonSlug") || "").trim();
-  const questionId = String(formData.get("questionId") || "").trim();
-  const choiceId = String(formData.get("choiceId") || "").trim();
 
-  if (!lessonId || !lessonSlug || !questionId || !choiceId) {
-    redirect(`/learn/${lessonSlug}?quiz=missing-answer`);
+  if (!lessonId || !lessonSlug) {
+    redirect("/learn");
   }
 
   const [lesson, user] = await Promise.all([
@@ -36,6 +35,10 @@ async function submitQuiz(formData: FormData): Promise<void> {
           select: {
             level: true,
           },
+        },
+        quizQuestions: {
+          orderBy: { order: "asc" },
+          select: { id: true },
         },
       },
     }),
@@ -61,24 +64,47 @@ async function submitQuiz(formData: FormData): Promise<void> {
     redirect("/learn");
   }
 
-  const choice = await prisma.quizChoice.findFirst({
+  if (lesson.quizQuestions.length === 0) {
+    redirect(`/learn/${lessonSlug}?quiz=unavailable`);
+  }
+
+  const selectedChoiceByQuestion = new Map(
+    lesson.quizQuestions.map((question) => [
+      question.id,
+      String(formData.get(`question-${question.id}`) || "").trim(),
+    ]),
+  );
+
+  if ([...selectedChoiceByQuestion.values()].some((choiceId) => !choiceId)) {
+    redirect(`/learn/${lessonSlug}?quiz=missing-answer`);
+  }
+
+  const selectedChoices = await prisma.quizChoice.findMany({
     where: {
-      id: choiceId,
-      questionId,
-      question: {
-        lessonId: lesson.id,
-      },
+      id: { in: [...selectedChoiceByQuestion.values()] },
+      questionId: { in: lesson.quizQuestions.map((question) => question.id) },
     },
     select: {
+      id: true,
+      questionId: true,
       isCorrect: true,
     },
   });
+  const answerByQuestion = new Map(
+    selectedChoices.map((choice) => [choice.questionId, choice]),
+  );
+  const answersAreValid = lesson.quizQuestions.every((question) => {
+    const selectedChoiceId = selectedChoiceByQuestion.get(question.id);
+    const answer = answerByQuestion.get(question.id);
 
-  if (!choice) {
+    return Boolean(answer && answer.id === selectedChoiceId);
+  });
+
+  if (!answersAreValid) {
     redirect(`/learn/${lessonSlug}?quiz=invalid-answer`);
   }
 
-  if (!choice.isCorrect) {
+  if ([...answerByQuestion.values()].some((answer) => !answer.isCorrect)) {
     redirect(`/learn/${lessonSlug}?quiz=incorrect`);
   }
 
@@ -207,7 +233,12 @@ export default async function LessonPage({
   }
 
   const isCompleted = lesson.progress.length > 0;
-  const quizQuestion = lesson.quizQuestions[0];
+  const quizQuestions = lesson.quizQuestions;
+  const promotionDefinition = getCapstoneByRole(lesson.role.slug);
+  const lessonSequence = promotionDefinition?.requiredLessonSlugs ?? [];
+  const lessonIndex = lessonSequence.indexOf(lesson.slug);
+  const nextLessonSlug =
+    lessonIndex >= 0 ? lessonSequence[lessonIndex + 1] : undefined;
 
   return (
     <div className="space-y-8">
@@ -281,19 +312,46 @@ export default async function LessonPage({
               Lesson Completed
             </div>
 
-            {quizQuestion?.explanation && (
-              <div className="mt-5 rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-                <p className="text-xs uppercase tracking-widest text-zinc-500">
-                  Explanation
-                </p>
+            <div className="mt-5 space-y-3">
+              {quizQuestions.map((question, index) => (
+                <div
+                  key={question.id}
+                  className="rounded-xl border border-zinc-800 bg-zinc-950 p-4"
+                >
+                  <p className="text-xs uppercase tracking-widest text-zinc-500">
+                    Question {index + 1} explanation
+                  </p>
 
-                <p className="mt-2 text-sm leading-6 text-zinc-300">
-                  {quizQuestion.explanation}
-                </p>
-              </div>
-            )}
+                  <p className="mt-2 text-sm leading-6 text-zinc-300">
+                    {question.explanation}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              {nextLessonSlug ? (
+                <Link
+                  href={`/learn/${nextLessonSlug}`}
+                  className="osiris-button"
+                >
+                  Continue to next lesson
+                </Link>
+              ) : promotionDefinition ? (
+                <Link href="/city" className="osiris-button">
+                  Enter Mission Training City
+                </Link>
+              ) : null}
+
+              <Link
+                href={`/learn?district=${lesson.role.slug}`}
+                className="osiris-button-secondary"
+              >
+                Return to learning path
+              </Link>
+            </div>
           </>
-        ) : !quizQuestion ? (
+        ) : quizQuestions.length === 0 ? (
           <div className="mt-5 rounded-xl border border-dashed border-zinc-800 bg-black/40 p-5">
             <p className="text-sm text-zinc-400">
               No quiz has been assigned to this lesson yet.
@@ -302,7 +360,8 @@ export default async function LessonPage({
         ) : (
           <>
             <p className="mt-3 text-sm leading-6 text-zinc-400">
-              Select the correct answer to complete the lesson and earn XP.
+              Answer all {quizQuestions.length} questions correctly to complete
+              the lesson and earn XP.
             </p>
 
             {quiz === "incorrect" && (
@@ -331,43 +390,55 @@ export default async function LessonPage({
               </div>
             )}
 
+            {quiz === "unavailable" && (
+              <div className="mt-5 rounded-xl border border-red-500/30 bg-red-500/10 p-4">
+                <p className="font-bold text-red-300">
+                  This knowledge check is not available yet.
+                </p>
+              </div>
+            )}
+
             <form action={submitQuiz} className="mt-6 space-y-5">
               <input type="hidden" name="lessonId" value={lesson.id} />
               <input type="hidden" name="lessonSlug" value={lesson.slug} />
-              <input type="hidden" name="questionId" value={quizQuestion.id} />
 
-              <fieldset>
-                <legend className="text-lg font-bold text-white">
-                  {quizQuestion.question}
-                </legend>
+              {quizQuestions.map((question, questionIndex) => (
+                <fieldset
+                  key={question.id}
+                  className="rounded-2xl border border-zinc-800 bg-black/40 p-5"
+                >
+                  <legend className="px-2 text-lg font-bold text-white">
+                    {questionIndex + 1}. {question.question}
+                  </legend>
 
-                <div className="mt-5 space-y-3">
-                  {quizQuestion.choices.map((choice) => (
-                    <label
-                      key={choice.id}
-                      className="flex cursor-pointer items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-950 p-4 transition hover:border-yellow-500/30"
-                    >
-                      <input
-                        type="radio"
-                        name="choiceId"
-                        value={choice.id}
-                        required
-                        className="mt-1"
-                      />
+                  <div className="mt-4 space-y-3">
+                    {question.choices.map((choice) => (
+                      <label
+                        key={choice.id}
+                        className="flex cursor-pointer items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-950 p-4 transition hover:border-yellow-500/30 has-[:checked]:border-yellow-400 has-[:checked]:bg-yellow-400/10"
+                      >
+                        <input
+                          type="radio"
+                          name={`question-${question.id}`}
+                          value={choice.id}
+                          required
+                          className="mt-1 accent-yellow-400"
+                        />
 
-                      <span className="text-sm leading-6 text-zinc-300">
-                        {choice.text}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
+                        <span className="text-sm leading-6 text-zinc-300">
+                          {choice.text}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              ))}
 
               <button
                 type="submit"
                 className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-5 py-3 font-bold text-yellow-400 transition hover:bg-yellow-500/20"
               >
-                Submit Answer
+                Submit Knowledge Check
               </button>
             </form>
           </>

@@ -1,11 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import {
-  ArrowRight,
-  CheckCircle2,
-  LockKeyhole,
-  MapPinned,
-} from "lucide-react";
+import { ArrowRight, CheckCircle2, LockKeyhole, MapPinned } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import {
@@ -45,9 +40,7 @@ export default async function LearnPage({
     return (
       <div className="osiris-card">
         <p className="osiris-eyebrow">Training City Curriculum</p>
-        <h1 className="mt-3 text-3xl font-bold text-white">
-          No Role Assigned
-        </h1>
+        <h1 className="mt-3 text-3xl font-bold text-white">No Role Assigned</h1>
         <p className="mt-3 text-zinc-400">
           Your account does not currently have a training role assigned.
         </p>
@@ -115,10 +108,9 @@ export default async function LearnPage({
     (district) => currentRole.level >= district.requiredLevel,
   );
   const selectedDistrict =
-    requestedDistrict &&
-    currentRole.level >= requestedDistrict.requiredLevel
+    requestedDistrict && currentRole.level >= requestedDistrict.requiredLevel
       ? requestedDistrict
-      : currentDistrict ?? unlockedDistricts[unlockedDistricts.length - 1];
+      : (currentDistrict ?? unlockedDistricts[unlockedDistricts.length - 1]);
 
   if (!selectedDistrict) {
     return (
@@ -177,10 +169,7 @@ export default async function LearnPage({
               clearance increases.
             </p>
           </div>
-          <Link
-            href="/city"
-            className="osiris-button-secondary shrink-0 gap-2"
-          >
+          <Link href="/city" className="osiris-button-secondary shrink-0 gap-2">
             View city map
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>
@@ -269,8 +258,8 @@ export default async function LearnPage({
             Modules Coming Soon
           </h2>
           <p className="mt-3 text-zinc-400">
-            This district is unlocked, but its published curriculum has not
-            been deployed yet.
+            This district is unlocked, but its published curriculum has not been
+            deployed yet.
           </p>
         </section>
       ) : (
@@ -289,9 +278,7 @@ export default async function LearnPage({
 
                 <div className="mt-5 flex flex-wrap gap-2">
                   <span className="osiris-badge">{course.difficulty}</span>
-                  <span className="osiris-badge-dark">
-                    {course.role.name}
-                  </span>
+                  <span className="osiris-badge-dark">{course.role.name}</span>
                   {course.certification && (
                     <span className="osiris-badge-dark">
                       {course.certification}
@@ -480,7 +467,7 @@ export default async function LearnPage({
                                 Lesson Preview
                               </p>
                               <p className="mt-2 text-sm leading-6 text-zinc-400">
-                                {lesson.content}
+                                {lesson.description}
                               </p>
                             </div>
                           </Link>

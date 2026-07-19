@@ -58,6 +58,28 @@ async function main() {
   });
   assert.equal(unsafeEvaluation.passed, false);
 
+  const wrongRiskEvaluation = scoreCapstoneResponse(definition, {
+    riskLevel: "low",
+    controls: ["restrict-nsg", "require-ssh-key", "enable-logging"],
+    validationSteps: [
+      "test-admin-network",
+      "test-public-block",
+      "verify-soc-logs",
+    ],
+    closureNote:
+      "Reviewed the Payroll App Server SSH exposure, restricted access to the administrator network, blocked public connections, and verified the access logs reached the SOC monitoring queue.",
+  });
+  assert.equal(wrongRiskEvaluation.passed, false);
+
+  const missingValidationEvaluation = scoreCapstoneResponse(definition, {
+    riskLevel: "high",
+    controls: ["restrict-nsg", "require-ssh-key", "enable-logging"],
+    validationSteps: [],
+    closureNote:
+      "Reviewed the Payroll App Server SSH exposure, restricted access to the administrator network, blocked public connections, and verified the access logs reached the SOC monitoring queue.",
+  });
+  assert.equal(missingValidationEvaluation.passed, false);
+
   const [cyberCadet, capstoneTicket, lessons] = await Promise.all([
     prisma.role.findUniqueOrThrow({ where: { slug: "cyber-cadet" } }),
     prisma.ticket.findUniqueOrThrow({
@@ -65,10 +87,42 @@ async function main() {
     }),
     prisma.lesson.findMany({
       where: { slug: { in: [...definition.requiredLessonSlugs] } },
-      select: { id: true },
+      select: {
+        id: true,
+        slug: true,
+        content: true,
+        quizQuestions: {
+          orderBy: { order: "asc" },
+          select: {
+            choices: {
+              select: { isCorrect: true },
+            },
+          },
+        },
+      },
     }),
   ]);
   assert.equal(lessons.length, definition.requiredLessonSlugs.length);
+
+  for (const lesson of lessons) {
+    assert(
+      lesson.content.trim().split(/\s+/).length >= 500,
+      `${lesson.slug} must contain at least 500 words.`,
+    );
+    assert.equal(
+      lesson.quizQuestions.length,
+      4,
+      `${lesson.slug} must contain four quiz questions.`,
+    );
+
+    for (const question of lesson.quizQuestions) {
+      assert.equal(question.choices.length, 4);
+      assert.equal(
+        question.choices.filter((choice) => choice.isCorrect).length,
+        1,
+      );
+    }
+  }
 
   const verificationUser = await prisma.user.create({
     data: {

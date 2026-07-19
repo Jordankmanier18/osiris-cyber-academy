@@ -41,7 +41,7 @@ const capstoneSubmissionSchema = z.object({
   riskLevel: z.string().trim().min(1).max(30),
   controls: z.array(z.string().trim().min(1).max(80)).max(20),
   validationSteps: z.array(z.string().trim().min(1).max(80)).max(20),
-  closureNote: z.string().trim().min(50).max(1500),
+  closureNote: z.string().trim().min(80).max(1500),
 });
 
 export async function submitCapstoneTicket(
@@ -69,7 +69,7 @@ export async function submitCapstoneTicket(
     return {
       status: "error",
       message:
-        "Complete every section and write a closure note of at least 50 characters.",
+        "Complete every section and write a closure note of at least 80 characters.",
     };
   }
 
