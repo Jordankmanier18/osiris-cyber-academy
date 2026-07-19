@@ -6,6 +6,7 @@ import {
   Siren,
   type LucideIcon,
 } from "lucide-react";
+import { roleDisplayNames } from "@/lib/role-ladder";
 
 export type TrainingCityDistrict = {
   slug: string;
@@ -29,7 +30,7 @@ export const trainingCityDistricts: readonly TrainingCityDistrict[] = [
     description:
       "Begin your academy briefing, learn the training system, and establish your cyber foundations.",
     roleSlug: "cyber-cadet",
-    requiredRole: "Cyber Cadet",
+    requiredRole: roleDisplayNames["cyber-cadet"],
     requiredLevel: 1,
     learnHref: "/learn?district=cyber-cadet",
     action: "Open orientation modules",
@@ -43,7 +44,7 @@ export const trainingCityDistricts: readonly TrainingCityDistrict[] = [
     description:
       "Respond to user issues, document incidents, and practice structured technical support workflows.",
     roleSlug: "it-support-trainee",
-    requiredRole: "IT Support Trainee",
+    requiredRole: roleDisplayNames["it-support-trainee"],
     requiredLevel: 2,
     learnHref: "/learn?district=it-support-trainee",
     action: "Open help desk modules",
@@ -57,7 +58,7 @@ export const trainingCityDistricts: readonly TrainingCityDistrict[] = [
     description:
       "Trace connectivity, inspect name resolution, and build practical network troubleshooting skills.",
     roleSlug: "network-support-trainee",
-    requiredRole: "Network Support Trainee",
+    requiredRole: roleDisplayNames["network-support-trainee"],
     requiredLevel: 3,
     learnHref: "/learn?district=network-support-trainee",
     action: "Open network modules",
@@ -71,7 +72,7 @@ export const trainingCityDistricts: readonly TrainingCityDistrict[] = [
     description:
       "Investigate threats, strengthen human defenses, and practice foundational security decisions.",
     roleSlug: "security-trainee",
-    requiredRole: "Security Trainee",
+    requiredRole: roleDisplayNames["security-trainee"],
     requiredLevel: 4,
     learnHref: "/learn?district=security-trainee",
     action: "Open security modules",
@@ -85,7 +86,7 @@ export const trainingCityDistricts: readonly TrainingCityDistrict[] = [
     description:
       "Triage alerts, examine evidence, and coordinate the city’s defensive response operations.",
     roleSlug: "junior-security-analyst",
-    requiredRole: "Junior Security Analyst",
+    requiredRole: roleDisplayNames["junior-security-analyst"],
     requiredLevel: 5,
     learnHref: "/learn?district=junior-security-analyst",
     action: "Open SOC modules",

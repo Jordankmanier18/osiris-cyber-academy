@@ -9,6 +9,7 @@
     "lint": "eslint",
     "db:sync-city": "node --import tsx scripts/sync-training-city-curriculum.ts",
     "db:sync-progression": "node --import tsx scripts/sync-promotion-content.ts",
+    "db:sync-role-names": "node --import tsx scripts/sync-role-names.ts",
     "test:promotion": "node --import tsx scripts/verify-promotion-flow.ts"
   },
   "dependencies": {

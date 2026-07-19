@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { PrismaClient, type Prisma } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { roleDisplayNames } from "../lib/role-ladder";
 import { trainingCityCurriculum } from "./training-city-curriculum";
 
 const adapter = new PrismaPg({
@@ -29,7 +30,7 @@ async function main() {
 
   const cyberCadet = await prisma.role.create({
     data: {
-      name: "Cyber Cadet",
+      name: roleDisplayNames["cyber-cadet"],
       slug: "cyber-cadet",
       level: 1,
       description:
@@ -43,7 +44,7 @@ async function main() {
 
   const itSupportTrainee = await prisma.role.create({
     data: {
-      name: "IT Support Trainee",
+      name: roleDisplayNames["it-support-trainee"],
       slug: "it-support-trainee",
       level: 2,
       description:
@@ -57,7 +58,7 @@ async function main() {
 
   const networkSupportTrainee = await prisma.role.create({
     data: {
-      name: "Network Support Trainee",
+      name: roleDisplayNames["network-support-trainee"],
       slug: "network-support-trainee",
       level: 3,
       description:
@@ -71,7 +72,7 @@ async function main() {
 
   const securityTrainee = await prisma.role.create({
     data: {
-      name: "Security Trainee",
+      name: roleDisplayNames["security-trainee"],
       slug: "security-trainee",
       level: 4,
       description:
@@ -85,7 +86,7 @@ async function main() {
 
   const juniorSecurityAnalyst = await prisma.role.create({
     data: {
-      name: "Junior Security Analyst",
+      name: roleDisplayNames["junior-security-analyst"],
       slug: "junior-security-analyst",
       level: 5,
       description:
@@ -361,7 +362,7 @@ async function main() {
         description:
           "Complete your first onboarding mission and learn how role-based progression works.",
         scenario:
-          "You have joined Osiris Cyber Academy as a Cyber Cadet. Your first task is to understand how your training dashboard works.",
+          `You have joined Osiris Cyber Academy as a ${roleDisplayNames["cyber-cadet"]}. Your first task is to understand how your training dashboard works.`,
         difficulty: "Beginner",
         roleId: cyberCadet.id,
         category: "Onboarding",

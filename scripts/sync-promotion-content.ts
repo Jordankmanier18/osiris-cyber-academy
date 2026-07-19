@@ -15,7 +15,9 @@ async function main() {
   });
 
   if (!cyberCadet) {
-    throw new Error("Cyber Cadet role is missing. Run the main seed first.");
+    throw new Error(
+      "Cybersecurity Apprentice role is missing. Run the main seed first.",
+    );
   }
 
   await prisma.ticket.upsert({

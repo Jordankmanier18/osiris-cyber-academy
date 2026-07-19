@@ -35,7 +35,7 @@ export async function signupAction(formData: FormData): Promise<void> {
 
   if (!cyberCadetRole) {
     throw new Error(
-      "The Cyber Cadet role is not available. Run the database seed first.",
+      "The Cybersecurity Apprentice role is not available. Run the database seed first.",
     );
   }
 

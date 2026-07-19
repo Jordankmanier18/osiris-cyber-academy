@@ -1,3 +1,5 @@
+import { roleDisplayNames } from "@/lib/role-ladder";
+
 export type TrainingCityControl = {
   id: string;
   label: string;
@@ -29,7 +31,7 @@ export const trainingCityMissions: readonly TrainingCityMission[] = [
     objective:
       "Restrict the door and replace password access before the attacker arrives.",
     requiredLevel: 1,
-    requiredRole: "Cyber Cadet",
+    requiredRole: roleDisplayNames["cyber-cadet"],
     targetAsset: "Payroll App Server",
     attackPath: ["Internet Gate", "Payroll App Server", "Payroll Bank"],
     controls: [
@@ -64,7 +66,7 @@ export const trainingCityMissions: readonly TrainingCityMission[] = [
       "An employee house is missing critical updates and endpoint protection.",
     objective: "Patch the workstation and activate its local defenses.",
     requiredLevel: 2,
-    requiredRole: "IT Support Trainee",
+    requiredRole: roleDisplayNames["it-support-trainee"],
     prerequisiteMissionId: "open-ssh-door",
     targetAsset: "Employee House",
     attackPath: ["Phishing Mailbox", "Employee House", "Payroll App Server"],
@@ -100,7 +102,7 @@ export const trainingCityMissions: readonly TrainingCityMission[] = [
     objective:
       "Remove public access and monitor every attempt to reach payroll data.",
     requiredLevel: 3,
-    requiredRole: "Network Support Trainee",
+    requiredRole: roleDisplayNames["network-support-trainee"],
     prerequisiteMissionId: "unpatched-workstation",
     targetAsset: "Payroll Bank",
     attackPath: ["Internet Gate", "Public Endpoint", "Payroll Bank"],
@@ -137,7 +139,7 @@ export const trainingCityMissions: readonly TrainingCityMission[] = [
     objective:
       "Rotate the secret, remove the exposed copy, and enforce least privilege.",
     requiredLevel: 4,
-    requiredRole: "Security Trainee",
+    requiredRole: roleDisplayNames["security-trainee"],
     prerequisiteMissionId: "public-database",
     targetAsset: "Key Vault",
     attackPath: ["Payroll App Server", "Exposed Secret", "Key Vault"],

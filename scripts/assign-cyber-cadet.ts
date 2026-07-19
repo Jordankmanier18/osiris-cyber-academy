@@ -19,7 +19,7 @@ async function main() {
 
   if (!cyberCadetRole) {
     throw new Error(
-      "Cyber Cadet role was not found. Run: npx prisma db seed",
+      "Cybersecurity Apprentice role was not found. Run: npx prisma db seed",
     );
   }
 
