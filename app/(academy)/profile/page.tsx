@@ -66,17 +66,17 @@ export default async function ProfilePage() {
   );
 
   return (
-    <div className="space-y-6 pb-10">
-      <section className="relative overflow-hidden rounded-3xl border border-yellow-500/20 bg-[radial-gradient(circle_at_top_right,rgba(250,204,21,0.13),transparent_34%),linear-gradient(135deg,#18181b,#050505_62%)] p-6 shadow-2xl md:p-8">
+    <div className="space-y-3 pb-8">
+      <section className="osiris-panel relative overflow-hidden p-5 md:p-6">
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-yellow-400/25 bg-yellow-400/10 text-yellow-400">
+              <span className="flex h-12 w-12 items-center justify-center border border-yellow-400/35 bg-yellow-400/10 text-yellow-400 [clip-path:polygon(50%_0%,92%_22%,92%_75%,50%_100%,8%_75%,8%_22%)]">
                 <ShieldCheck className="h-5 w-5" aria-hidden="true" />
               </span>
               <p className="osiris-eyebrow">Permanent Academy Record</p>
             </div>
-            <h1 className="mt-5 text-3xl font-black text-white md:text-5xl">
+            <h1 className="mt-4 text-3xl font-black uppercase tracking-tight text-white md:text-4xl">
               {user.name ?? "Osiris Operative"}
             </h1>
             <p className="mt-3 text-sm font-bold text-zinc-500">{user.email}</p>
@@ -90,7 +90,7 @@ export default async function ProfilePage() {
         </div>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <RecordStat
           label="Academy XP"
           value={user.points.toString()}
@@ -113,8 +113,8 @@ export default async function ProfilePage() {
         />
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <div className="osiris-panel p-6">
+      <section className="grid gap-3 xl:grid-cols-[0.9fr_1.1fr]">
+        <div className="osiris-panel p-5">
           <p className="osiris-eyebrow">Current role</p>
           <h2 className="mt-3 text-2xl font-black text-yellow-400">
             {user.role?.name ?? "No role assigned"}
@@ -124,7 +124,7 @@ export default async function ProfilePage() {
               "Your account does not currently have a role track."}
           </p>
           {user.role?.framework ? (
-            <div className="mt-5 rounded-2xl border border-yellow-500/15 bg-black p-4">
+            <div className="mt-5 border border-yellow-500/15 bg-black p-4">
               <p className="text-[0.65rem] font-black uppercase tracking-[0.2em] text-zinc-600">
                 Framework
               </p>
@@ -135,7 +135,7 @@ export default async function ProfilePage() {
           ) : null}
         </div>
 
-        <div className="osiris-panel p-6">
+        <div className="osiris-panel p-5">
           <div className="flex items-center gap-3">
             <Award className="h-5 w-5 text-yellow-400" aria-hidden="true" />
             <div>
@@ -146,7 +146,7 @@ export default async function ProfilePage() {
             </div>
           </div>
           {user.promotions.length === 0 ? (
-            <p className="mt-5 rounded-2xl border border-dashed border-zinc-800 bg-black/40 p-5 text-sm leading-6 text-zinc-500">
+            <p className="mt-5 border border-dashed border-zinc-800 bg-black/40 p-5 text-sm leading-6 text-zinc-500">
               Complete the lessons, city defense, and capstone for your first
               promotion to appear here.
             </p>
@@ -155,7 +155,7 @@ export default async function ProfilePage() {
               {user.promotions.map((promotion) => (
                 <div
                   key={promotion.id}
-                  className="flex items-start gap-3 rounded-2xl border border-green-500/15 bg-green-500/5 p-4"
+                  className="flex items-start gap-3 border border-green-500/15 bg-green-500/5 p-4"
                 >
                   <CheckCircle2
                     className="mt-0.5 h-5 w-5 shrink-0 text-green-400"
@@ -177,7 +177,7 @@ export default async function ProfilePage() {
         </div>
       </section>
 
-      <section className="osiris-panel p-6">
+      <section className="osiris-panel p-5">
         <p className="osiris-eyebrow">Evidence of work</p>
         <h2 className="mt-2 text-2xl font-black text-white">
           Recent completions
@@ -199,7 +199,7 @@ export default async function ProfilePage() {
           ].map((item) => (
             <div
               key={`${item.type}-${item.id}`}
-              className="rounded-2xl border border-white/5 bg-black p-4"
+              className="border border-white/5 bg-black p-4"
             >
               <p className="text-[0.65rem] font-black uppercase tracking-[0.18em] text-yellow-400">
                 {item.type}
@@ -233,7 +233,7 @@ function RecordStat({
   icon: RecordIcon;
 }) {
   return (
-    <div className="rounded-2xl border border-yellow-500/15 bg-zinc-950 p-5">
+    <div className="border border-yellow-500/20 bg-[linear-gradient(145deg,rgba(15,14,11,0.98),rgba(3,3,3,0.98))] p-4">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-[0.65rem] font-black uppercase tracking-[0.2em] text-zinc-600">
@@ -241,7 +241,7 @@ function RecordStat({
           </p>
           <p className="mt-2 text-3xl font-black text-white">{value}</p>
         </div>
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-yellow-400/20 bg-yellow-400/10 text-yellow-400">
+        <span className="flex h-9 w-9 items-center justify-center border border-yellow-400/20 bg-yellow-400/10 text-yellow-400">
           <Icon className="h-5 w-5" aria-hidden="true" />
         </span>
       </div>
