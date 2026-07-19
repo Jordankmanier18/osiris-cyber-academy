@@ -16,7 +16,7 @@ async function main() {
 
   if (!cyberCadet) {
     throw new Error(
-      "Cybersecurity Apprentice role is missing. Run the main seed first.",
+      "Cybersecurity Apprentice role is missing. Run npm run db:sync-content.",
     );
   }
 

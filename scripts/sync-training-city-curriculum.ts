@@ -26,7 +26,7 @@ async function main() {
 
     if (!role) {
       throw new Error(
-        `Role ${district.roleSlug} is missing. Run the main Prisma seed first.`,
+        `Role ${district.roleSlug} is missing. Run npm run db:sync-content.`,
       );
     }
 

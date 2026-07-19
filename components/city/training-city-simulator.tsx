@@ -708,8 +708,8 @@ export function TrainingCitySimulator({
                     <ChevronRight className="h-4 w-4" />
                   </Link>
                 ) : (
-                  <Link href="/missions" className="osiris-button gap-2">
-                    View academy missions
+                  <Link href="/profile" className="osiris-button gap-2">
+                    View training record
                     <ChevronRight className="h-4 w-4" />
                   </Link>
                 )}

@@ -13,23 +13,11 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
-  console.log("Seeding Osiris Cyber Academy data...");
+  console.log("Synchronizing Osiris Cyber Academy content safely...");
 
-  await prisma.quizChoice.deleteMany();
-  await prisma.quizQuestion.deleteMany();
-  await prisma.userProgress.deleteMany();
-  await prisma.submission.deleteMany();
-  await prisma.ticket.deleteMany();
-  await prisma.lab.deleteMany();
-  await prisma.lesson.deleteMany();
-  await prisma.module.deleteMany();
-  await prisma.course.deleteMany();
-  await prisma.mission.deleteMany();
-  await prisma.user.deleteMany();
-  await prisma.role.deleteMany();
-
-  const cyberCadet = await prisma.role.create({
-    data: {
+  const cyberCadet = await prisma.role.upsert({
+    where: { slug: "cyber-cadet" },
+    create: {
       name: roleDisplayNames["cyber-cadet"],
       slug: "cyber-cadet",
       level: 1,
@@ -40,10 +28,21 @@ async function main() {
       xpRequired: 0,
       nextRoleSlug: "it-support-trainee",
     },
+    update: {
+      name: roleDisplayNames["cyber-cadet"],
+      level: 1,
+      description:
+        "The beginner role for new students learning computers, operating systems, networking basics, and cybersecurity fundamentals.",
+      framework: "CompTIA Tech+",
+      certification: "Tech+ / IT Fundamentals",
+      xpRequired: 0,
+      nextRoleSlug: "it-support-trainee",
+    },
   });
 
-  const itSupportTrainee = await prisma.role.create({
-    data: {
+  const itSupportTrainee = await prisma.role.upsert({
+    where: { slug: "it-support-trainee" },
+    create: {
       name: roleDisplayNames["it-support-trainee"],
       slug: "it-support-trainee",
       level: 2,
@@ -54,10 +53,21 @@ async function main() {
       xpRequired: 150,
       nextRoleSlug: "network-support-trainee",
     },
+    update: {
+      name: roleDisplayNames["it-support-trainee"],
+      level: 2,
+      description:
+        "Introduces help desk workflows, endpoint troubleshooting, user support, accounts, passwords, and basic device security.",
+      framework: "CompTIA A+",
+      certification: "CompTIA A+",
+      xpRequired: 150,
+      nextRoleSlug: "network-support-trainee",
+    },
   });
 
-  const networkSupportTrainee = await prisma.role.create({
-    data: {
+  const networkSupportTrainee = await prisma.role.upsert({
+    where: { slug: "network-support-trainee" },
+    create: {
       name: roleDisplayNames["network-support-trainee"],
       slug: "network-support-trainee",
       level: 3,
@@ -68,10 +78,21 @@ async function main() {
       xpRequired: 350,
       nextRoleSlug: "security-trainee",
     },
+    update: {
+      name: roleDisplayNames["network-support-trainee"],
+      level: 3,
+      description:
+        "Focuses on networking fundamentals including IP addressing, DNS, DHCP, ports, firewalls, and basic connectivity troubleshooting.",
+      framework: "CompTIA Network+",
+      certification: "CompTIA Network+",
+      xpRequired: 350,
+      nextRoleSlug: "security-trainee",
+    },
   });
 
-  const securityTrainee = await prisma.role.create({
-    data: {
+  const securityTrainee = await prisma.role.upsert({
+    where: { slug: "security-trainee" },
+    create: {
       name: roleDisplayNames["security-trainee"],
       slug: "security-trainee",
       level: 4,
@@ -82,12 +103,33 @@ async function main() {
       xpRequired: 600,
       nextRoleSlug: "junior-security-analyst",
     },
+    update: {
+      name: roleDisplayNames["security-trainee"],
+      level: 4,
+      description:
+        "Introduces security concepts, threats, IAM, MFA, phishing, logs, risk, and foundational defensive thinking.",
+      framework: "CompTIA Security+",
+      certification: "CompTIA Security+",
+      xpRequired: 600,
+      nextRoleSlug: "junior-security-analyst",
+    },
   });
 
-  const juniorSecurityAnalyst = await prisma.role.create({
-    data: {
+  const juniorSecurityAnalyst = await prisma.role.upsert({
+    where: { slug: "junior-security-analyst" },
+    create: {
       name: roleDisplayNames["junior-security-analyst"],
       slug: "junior-security-analyst",
+      level: 5,
+      description:
+        "Prepares the student for SOC Tier 1 work through alert triage, log review, escalation, incident notes, and basic SIEM workflows.",
+      framework: "Security+ / SOC Tier 1 / NICE Cyber Defense Analyst",
+      certification: "Security+ / SOC Analyst Foundations",
+      xpRequired: 900,
+      nextRoleSlug: "soc-analyst-i",
+    },
+    update: {
+      name: roleDisplayNames["junior-security-analyst"],
       level: 5,
       description:
         "Prepares the student for SOC Tier 1 work through alert triage, log review, escalation, incident notes, and basic SIEM workflows.",
@@ -115,8 +157,14 @@ async function main() {
       throw new Error(`Role not found for curriculum: ${district.roleSlug}`);
     }
 
-    const course = await prisma.course.create({
-      data: {
+    const course = await prisma.course.upsert({
+      where: { slug: district.course.slug },
+      create: {
+        ...district.course,
+        roleId,
+        isPublished: true,
+      },
+      update: {
         ...district.course,
         roleId,
         isPublished: true,
@@ -124,10 +172,18 @@ async function main() {
     });
 
     for (const curriculumModule of district.modules) {
-      const moduleRecord = await prisma.module.create({
-        data: {
+      const moduleRecord = await prisma.module.upsert({
+        where: { slug: curriculumModule.slug },
+        create: {
           title: curriculumModule.title,
           slug: curriculumModule.slug,
+          description: curriculumModule.description,
+          order: curriculumModule.order,
+          courseId: course.id,
+          isPublished: true,
+        },
+        update: {
+          title: curriculumModule.title,
           description: curriculumModule.description,
           order: curriculumModule.order,
           courseId: course.id,
@@ -145,18 +201,13 @@ async function main() {
     }
   }
 
-  await prisma.user.create({
-    data: {
-      name: "Jordan Manier",
-      email: "jordan@osiris.local",
-      roleId: cyberCadet.id,
-      points: 0,
-    },
-  });
-
-  await prisma.lesson.createMany({
-    data: lessonSeedData,
-  });
+  for (const lesson of lessonSeedData) {
+    await prisma.lesson.upsert({
+      where: { slug: lesson.slug },
+      create: lesson,
+      update: lesson,
+    });
+  }
 
   const quizLessons = await prisma.lesson.findMany({
     where: {
@@ -272,25 +323,69 @@ async function main() {
       throw new Error(`Lesson not found for quiz: ${quiz.lessonSlug}`);
     }
 
-    await prisma.quizQuestion.create({
-      data: {
-        lessonId,
-        question: quiz.question,
-        explanation: quiz.explanation,
-        order: 1,
-        choices: {
-          create: quiz.choices.map((choice, index) => ({
-            text: choice.text,
-            isCorrect: choice.isCorrect,
-            order: index + 1,
-          })),
-        },
-      },
+    const existingQuestion = await prisma.quizQuestion.findFirst({
+      where: { lessonId, order: 1 },
+      orderBy: { createdAt: "asc" },
+      select: { id: true },
     });
+
+    if (existingQuestion) {
+      await prisma.quizQuestion.update({
+        where: { id: existingQuestion.id },
+        data: {
+          question: quiz.question,
+          explanation: quiz.explanation,
+          order: 1,
+        },
+      });
+
+      const existingChoices = await prisma.quizChoice.findMany({
+        where: { questionId: existingQuestion.id },
+        select: { id: true, order: true },
+      });
+      const choiceByOrder = new Map(
+        existingChoices.map((choice) => [choice.order, choice.id]),
+      );
+
+      for (const [index, choice] of quiz.choices.entries()) {
+        const order = index + 1;
+        const existingChoiceId = choiceByOrder.get(order);
+
+        if (existingChoiceId) {
+          await prisma.quizChoice.update({
+            where: { id: existingChoiceId },
+            data: { ...choice, order },
+          });
+        } else {
+          await prisma.quizChoice.create({
+            data: {
+              ...choice,
+              questionId: existingQuestion.id,
+              order,
+            },
+          });
+        }
+      }
+    } else {
+      await prisma.quizQuestion.create({
+        data: {
+          lessonId,
+          question: quiz.question,
+          explanation: quiz.explanation,
+          order: 1,
+          choices: {
+            create: quiz.choices.map((choice, index) => ({
+              text: choice.text,
+              isCorrect: choice.isCorrect,
+              order: index + 1,
+            })),
+          },
+        },
+      });
+    }
   }
 
-  await prisma.lab.createMany({
-    data: [
+  const labSeedData: Prisma.LabCreateManyInput[] = [
       {
         title: "Identify Computer Components",
         slug: "identify-computer-components",
@@ -351,11 +446,17 @@ async function main() {
         instructions:
           "Search the provided log data for the user, source IP, event time, MFA status, and related activity.",
       },
-    ],
-  });
+  ];
 
-  await prisma.mission.createMany({
-    data: [
+  for (const lab of labSeedData) {
+    await prisma.lab.upsert({
+      where: { slug: lab.slug },
+      create: lab,
+      update: lab,
+    });
+  }
+
+  const missionSeedData: Prisma.MissionCreateManyInput[] = [
       {
         title: "First Day at Osiris",
         slug: "first-day-at-osiris",
@@ -426,11 +527,17 @@ async function main() {
         expectedAnswer:
           "The student should identify the activity as suspicious, verify user context, review related logs, check MFA details, and escalate if compromise is suspected.",
       },
-    ],
-  });
+  ];
 
-  await prisma.ticket.createMany({
-    data: [
+  for (const mission of missionSeedData) {
+    await prisma.mission.upsert({
+      where: { slug: mission.slug },
+      create: mission,
+      update: mission,
+    });
+  }
+
+  const ticketSeedData: Prisma.TicketCreateManyInput[] = [
       {
         title: "User Cannot Find a File",
         ticketCode: "OSR-CC-001",
@@ -513,10 +620,19 @@ async function main() {
         difficulty: "Beginner",
         xpReward: 30,
       },
-    ],
-  });
+  ];
 
-  console.log("Seed completed successfully.");
+  for (const ticket of ticketSeedData) {
+    await prisma.ticket.upsert({
+      where: { ticketCode: ticket.ticketCode },
+      create: ticket,
+      update: ticket,
+    });
+  }
+
+  console.log(
+    "Content synchronization completed successfully. Learner data was preserved.",
+  );
 }
 
 main()

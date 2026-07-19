@@ -5,7 +5,7 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
 
   migrations: {
-    seed: "tsx prisma/seed.ts",
+    seed: "npm run db:sync-content",
   },
 
   datasource: {

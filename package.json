@@ -7,6 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "db:seed": "npm run db:sync-content",
+    "db:sync-content": "node --import tsx prisma/seed.ts && npm run db:sync-city && npm run db:sync-progression && npm run db:sync-role-names",
+    "db:reset:development": "node --import tsx scripts/reset-development-database.ts",
     "db:sync-city": "node --import tsx scripts/sync-training-city-curriculum.ts",
     "db:sync-progression": "node --import tsx scripts/sync-promotion-content.ts",
     "db:sync-role-names": "node --import tsx scripts/sync-role-names.ts",
@@ -47,6 +50,6 @@
     "typescript": "^5"
   },
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "npm run db:sync-content"
   }
 }
