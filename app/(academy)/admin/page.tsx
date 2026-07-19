@@ -1,5 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
-
 const adminCards = [
   {
     title: "Courses",
@@ -21,8 +19,7 @@ const adminCards = [
 
 export default function AdminPage() {
   return (
-    <AppShell>
-      <section className="space-y-8">
+    <section className="space-y-8">
         <div>
           <p className="text-sm uppercase tracking-[0.3em] text-cyan-400">
             Admin Console
@@ -47,7 +44,6 @@ export default function AdminPage() {
             </div>
           ))}
         </div>
-      </section>
-    </AppShell>
+    </section>
   );
 }

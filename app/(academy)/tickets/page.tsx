@@ -1,5 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
-
 const tickets = [
   {
     id: "OSR-101",
@@ -23,8 +21,7 @@ const tickets = [
 
 export default function TicketsPage() {
   return (
-    <AppShell>
-      <section className="space-y-6">
+    <section className="space-y-6">
         <div>
           <h1 className="text-4xl font-bold">Tickets</h1>
           <p className="mt-4 max-w-2xl text-gray-400">
@@ -46,7 +43,6 @@ export default function TicketsPage() {
             </div>
           ))}
         </div>
-      </section>
-    </AppShell>
+    </section>
   );
 }

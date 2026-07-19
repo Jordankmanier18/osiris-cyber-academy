@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { AppShell } from "@/components/layout/app-shell";
 import { prisma } from "@/lib/prisma";
 
 export default async function AdminSubmissionsPage() {
@@ -14,8 +13,7 @@ export default async function AdminSubmissionsPage() {
   });
 
   return (
-    <AppShell>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <Link href="/admin" className="text-sm underline">
             ← Back to Admin
@@ -97,7 +95,6 @@ export default async function AdminSubmissionsPage() {
             })
           )}
         </div>
-      </div>
-    </AppShell>
+    </div>
   );
 }

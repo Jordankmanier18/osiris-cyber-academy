@@ -1,5 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
-
 const students = [
   { rank: 1, name: "Demo Student", xp: 450, badge: "Cyber Starter" },
   { rank: 2, name: "Future Analyst", xp: 300, badge: "Linux Rookie" },
@@ -8,8 +6,7 @@ const students = [
 
 export default function LeaderboardPage() {
   return (
-    <AppShell>
-      <section className="space-y-6">
+    <section className="space-y-6">
         <div>
           <h1 className="text-4xl font-bold">Leaderboard</h1>
           <p className="mt-4 max-w-2xl text-gray-400">
@@ -30,7 +27,6 @@ export default function LeaderboardPage() {
             </div>
           ))}
         </div>
-      </section>
-    </AppShell>
+    </section>
   );
 }

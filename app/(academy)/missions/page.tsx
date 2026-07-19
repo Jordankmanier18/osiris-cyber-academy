@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { AppShell } from "@/components/layout/app-shell";
 import { prisma } from "@/lib/prisma";
 
 export default async function MissionsPage() {
@@ -10,8 +9,7 @@ export default async function MissionsPage() {
   });
 
   return (
-    <AppShell>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Missions</h1>
           <p className="mt-2 text-muted-foreground">
@@ -42,7 +40,6 @@ export default async function MissionsPage() {
             </Link>
           ))}
         </div>
-      </div>
-    </AppShell>
+    </div>
   );
 }
