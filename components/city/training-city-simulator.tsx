@@ -60,6 +60,13 @@ type CompletionResult = {
   debrief: string;
 };
 
+type PromotionPath = {
+  missionKey: string;
+  capstoneHref: string;
+  capstoneReady: boolean;
+  remainingLessonCount: number;
+};
+
 const assets: Record<AssetId, { name: string; meaning: string }> = {
   employee: {
     name: "Employee House",
@@ -87,12 +94,14 @@ export function TrainingCitySimulator({
   roleLevel,
   academyXp,
   initialProgress,
+  promotionPath,
 }: {
   operativeName: string;
   roleName: string;
   roleLevel: number;
   academyXp: number;
   initialProgress: InitialProgress[];
+  promotionPath: PromotionPath | null;
 }) {
   const router = useRouter();
   const initialProgressMap = Object.fromEntries(
@@ -136,7 +145,8 @@ export function TrainingCitySimulator({
     "City simulation online.",
     `Clearance confirmed: ${roleName}.`,
   ]);
-  const [completedMissionIds, setCompletedMissionIds] = useState(initialCompleted);
+  const [completedMissionIds, setCompletedMissionIds] =
+    useState(initialCompleted);
   const [progressByMission, setProgressByMission] =
     useState<Record<string, ProgressSummary>>(initialProgressMap);
   const [currentXp, setCurrentXp] = useState(academyXp);
@@ -180,10 +190,7 @@ export function TrainingCitySimulator({
     setReflection("");
     setCompletionResult(null);
     setError(null);
-    setEvents([
-      `Mission loaded: ${nextMission.title}.`,
-      nextMission.briefing,
-    ]);
+    setEvents([`Mission loaded: ${nextMission.title}.`, nextMission.briefing]);
     setSelectedAsset(
       nextMission.id === "unpatched-workstation"
         ? "employee"
@@ -454,12 +461,63 @@ export function TrainingCitySimulator({
               </p>
             </div>
 
-            <TownAsset id="employee" icon={Home} label="Employee House" subtitle="Workstation" className="left-[7%] top-[28%]" selected={selectedAsset === "employee"} onSelect={setSelectedAsset} />
-            <TownAsset id="admin" icon={Home} label="Admin House" subtitle="Privileged endpoint" className="left-[11%] bottom-[9%]" selected={selectedAsset === "admin"} onSelect={setSelectedAsset} />
-            <TownAsset id="server" icon={Server} label="Payroll App" subtitle="Linux server" className="left-[39%] top-[29%]" selected={selectedAsset === "server"} onSelect={setSelectedAsset} warning={mission.targetAsset === "Payroll App Server"} />
-            <TownAsset id="bank" icon={Banknote} label="Payroll Bank" subtitle="Database" className="right-[7%] top-[24%]" selected={selectedAsset === "bank"} onSelect={setSelectedAsset} warning={mission.targetAsset === "Payroll Bank"} />
-            <TownAsset id="soc" icon={ShieldCheck} label="SOC Police" subtitle="Monitoring" className="right-[10%] bottom-[8%]" selected={selectedAsset === "soc"} onSelect={setSelectedAsset} />
-            <TownAsset id="vault" icon={KeyRound} label="Key Vault" subtitle="Secrets" className="left-[42%] bottom-[8%]" selected={selectedAsset === "vault"} onSelect={setSelectedAsset} warning={mission.targetAsset === "Key Vault"} />
+            <TownAsset
+              id="employee"
+              icon={Home}
+              label="Employee House"
+              subtitle="Workstation"
+              className="left-[7%] top-[28%]"
+              selected={selectedAsset === "employee"}
+              onSelect={setSelectedAsset}
+            />
+            <TownAsset
+              id="admin"
+              icon={Home}
+              label="Admin House"
+              subtitle="Privileged endpoint"
+              className="left-[11%] bottom-[9%]"
+              selected={selectedAsset === "admin"}
+              onSelect={setSelectedAsset}
+            />
+            <TownAsset
+              id="server"
+              icon={Server}
+              label="Payroll App"
+              subtitle="Linux server"
+              className="left-[39%] top-[29%]"
+              selected={selectedAsset === "server"}
+              onSelect={setSelectedAsset}
+              warning={mission.targetAsset === "Payroll App Server"}
+            />
+            <TownAsset
+              id="bank"
+              icon={Banknote}
+              label="Payroll Bank"
+              subtitle="Database"
+              className="right-[7%] top-[24%]"
+              selected={selectedAsset === "bank"}
+              onSelect={setSelectedAsset}
+              warning={mission.targetAsset === "Payroll Bank"}
+            />
+            <TownAsset
+              id="soc"
+              icon={ShieldCheck}
+              label="SOC Police"
+              subtitle="Monitoring"
+              className="right-[10%] bottom-[8%]"
+              selected={selectedAsset === "soc"}
+              onSelect={setSelectedAsset}
+            />
+            <TownAsset
+              id="vault"
+              icon={KeyRound}
+              label="Key Vault"
+              subtitle="Secrets"
+              className="left-[42%] bottom-[8%]"
+              selected={selectedAsset === "vault"}
+              onSelect={setSelectedAsset}
+              warning={mission.targetAsset === "Key Vault"}
+            />
 
             <div className="absolute right-5 top-5 z-20 flex items-center gap-2 rounded-full border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs font-black uppercase tracking-wider text-red-400">
               <Flame className="h-4 w-4" /> Threat actor
@@ -597,9 +655,18 @@ export function TrainingCitySimulator({
                 </div>
               </div>
               <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                <DebriefMetric label="Best score" value={`${completionResult.score}%`} />
-                <DebriefMetric label="Attack tests" value={String(completionResult.attemptCount)} />
-                <DebriefMetric label="Failed tests" value={String(completionResult.failedAttemptCount)} />
+                <DebriefMetric
+                  label="Best score"
+                  value={`${completionResult.score}%`}
+                />
+                <DebriefMetric
+                  label="Attack tests"
+                  value={String(completionResult.attemptCount)}
+                />
+                <DebriefMetric
+                  label="Failed tests"
+                  value={String(completionResult.failedAttemptCount)}
+                />
               </div>
               <div className="mt-5 rounded-2xl border border-yellow-500/15 bg-black/70 p-4">
                 <p className="text-xs font-black uppercase tracking-widest text-zinc-500">
@@ -610,7 +677,23 @@ export function TrainingCitySimulator({
                 </p>
               </div>
               <div className="mt-5 flex flex-wrap gap-3">
-                {nextMission && nextMissionIsUnlocked ? (
+                {promotionPath?.missionKey === mission.id &&
+                promotionPath.capstoneReady ? (
+                  <Link
+                    href={promotionPath.capstoneHref}
+                    className="osiris-button gap-2"
+                  >
+                    Open promotion capstone
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                ) : promotionPath?.missionKey === mission.id &&
+                  promotionPath.remainingLessonCount > 0 ? (
+                  <Link href="/learn" className="osiris-button gap-2">
+                    Finish {promotionPath.remainingLessonCount} required lesson
+                    {promotionPath.remainingLessonCount === 1 ? "" : "s"}
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                ) : nextMission && nextMissionIsUnlocked ? (
                   <button
                     type="button"
                     onClick={() => selectMission(nextMission)}

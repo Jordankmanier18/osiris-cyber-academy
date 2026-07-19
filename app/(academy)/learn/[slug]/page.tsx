@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { lockUserForProgression } from "@/lib/progression";
 
 async function submitQuiz(formData: FormData): Promise<void> {
   "use server";
@@ -82,6 +83,8 @@ async function submitQuiz(formData: FormData): Promise<void> {
   }
 
   await prisma.$transaction(async (tx) => {
+    await lockUserForProgression(tx, session.user.id);
+
     const existingProgress = await tx.userProgress.findFirst({
       where: {
         userId: session.user.id,
@@ -231,9 +234,7 @@ export default async function LessonPage({
             <div className="mt-5 flex flex-wrap gap-2">
               <span className="osiris-badge">{lesson.difficulty}</span>
 
-              <span className="osiris-badge-dark">
-                {lesson.role.name}
-              </span>
+              <span className="osiris-badge-dark">{lesson.role.name}</span>
 
               {lesson.module?.course.certification && (
                 <span className="osiris-badge-dark">
@@ -241,9 +242,7 @@ export default async function LessonPage({
                 </span>
               )}
 
-              {isCompleted && (
-                <span className="osiris-badge">Completed</span>
-              )}
+              {isCompleted && <span className="osiris-badge">Completed</span>}
             </div>
           </div>
 
@@ -270,9 +269,7 @@ export default async function LessonPage({
       <section className="osiris-card">
         <p className="osiris-eyebrow">Knowledge Check</p>
 
-        <h2 className="mt-3 text-2xl font-bold text-white">
-          Lesson Quiz
-        </h2>
+        <h2 className="mt-3 text-2xl font-bold text-white">Lesson Quiz</h2>
 
         {isCompleted ? (
           <>
@@ -310,9 +307,7 @@ export default async function LessonPage({
 
             {quiz === "incorrect" && (
               <div className="mt-5 rounded-xl border border-red-500/30 bg-red-500/10 p-4">
-                <p className="font-bold text-red-300">
-                  Incorrect answer
-                </p>
+                <p className="font-bold text-red-300">Incorrect answer</p>
 
                 <p className="mt-2 text-sm text-red-200/80">
                   Review the lesson content and try again.
@@ -338,16 +333,8 @@ export default async function LessonPage({
 
             <form action={submitQuiz} className="mt-6 space-y-5">
               <input type="hidden" name="lessonId" value={lesson.id} />
-              <input
-                type="hidden"
-                name="lessonSlug"
-                value={lesson.slug}
-              />
-              <input
-                type="hidden"
-                name="questionId"
-                value={quizQuestion.id}
-              />
+              <input type="hidden" name="lessonSlug" value={lesson.slug} />
+              <input type="hidden" name="questionId" value={quizQuestion.id} />
 
               <fieldset>
                 <legend className="text-lg font-bold text-white">

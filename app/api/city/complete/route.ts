@@ -3,6 +3,7 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { getTrainingCityMission } from "@/lib/training-city-missions";
 import { prisma } from "@/lib/prisma";
+import { lockUserForProgression } from "@/lib/progression";
 
 const completionSchema = z.object({
   missionKey: z.string().trim().min(1).max(100),
@@ -13,7 +14,10 @@ export async function POST(request: Request) {
   const session = await auth();
 
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "You must be logged in." }, { status: 401 });
+    return NextResponse.json(
+      { error: "You must be logged in." },
+      { status: 401 },
+    );
   }
 
   const parsed = completionSchema.safeParse(
@@ -30,7 +34,10 @@ export async function POST(request: Request) {
   const mission = getTrainingCityMission(parsed.data.missionKey);
 
   if (!mission) {
-    return NextResponse.json({ error: "Training mission not found." }, { status: 404 });
+    return NextResponse.json(
+      { error: "Training mission not found." },
+      { status: 404 },
+    );
   }
 
   const existing = await prisma.trainingCityProgress.findUnique({
@@ -50,6 +57,8 @@ export async function POST(request: Request) {
   }
 
   const result = await prisma.$transaction(async (transaction) => {
+    await lockUserForProgression(transaction, session.user.id);
+
     const claimed = await transaction.trainingCityProgress.updateMany({
       where: {
         userId: session.user.id,

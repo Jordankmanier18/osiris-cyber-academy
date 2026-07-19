@@ -13,11 +13,11 @@ import {
   MapPinned,
   ShieldCheck,
   Sparkles,
-  Target,
   Trophy,
 } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getPromotionStatus } from "@/lib/progression";
 import { trainingCityMissions } from "@/lib/training-city-missions";
 
 export const metadata: Metadata = {
@@ -100,7 +100,8 @@ export default async function DashboardPage() {
   }
 
   const currentRole = user.role;
-  const nextRole = currentRole.nextRoleSlug
+  const promotionStatus = await getPromotionStatus(session.user.id);
+  const fallbackNextRole = currentRole.nextRoleSlug
     ? await prisma.role.findUnique({
         where: { slug: currentRole.nextRoleSlug },
         select: {
@@ -111,6 +112,7 @@ export default async function DashboardPage() {
         },
       })
     : null;
+  const nextRole = promotionStatus?.nextRole ?? fallbackNextRole;
 
   const roleLessons = currentRole.courses.flatMap((course) =>
     course.modules.flatMap((module) => module.lessons),
@@ -151,46 +153,104 @@ export default async function DashboardPage() {
   const nextRoleThreshold = nextRole?.xpRequired ?? currentRoleThreshold;
   const xpRange = Math.max(nextRoleThreshold - currentRoleThreshold, 1);
   const xpIntoRole = Math.max(user.points - currentRoleThreshold, 0);
-  const promotionPercent = nextRole
+  const xpPromotionPercent = nextRole
     ? Math.min(Math.round((xpIntoRole / xpRange) * 100), 100)
     : 100;
+  const promotionPercent = promotionStatus?.available
+    ? Math.round(
+        (promotionStatus.completedRequirements /
+          promotionStatus.totalRequirements) *
+          100,
+      )
+    : xpPromotionPercent;
   const xpRemaining = nextRole
     ? Math.max(nextRole.xpRequired - user.points, 0)
     : 0;
 
-  const recommendedAction = nextLesson
-    ? {
-        eyebrow: "Continue learning",
-        title: nextLesson.title,
-        description: nextLesson.description,
-        href: `/learn/${nextLesson.slug}`,
-        label: "Open lesson",
-        reward: `${nextLesson.xpReward} XP`,
-        icon: BookOpen,
-      }
-    : nextCityMission
+  const requiredCityMission = promotionStatus?.city.missionKey
+    ? trainingCityMissions.find(
+        (mission) => mission.id === promotionStatus.city.missionKey,
+      )
+    : null;
+  const recommendedAction =
+    promotionStatus?.available &&
+    promotionStatus.firstIncompleteStep === "lessons"
       ? {
-          eyebrow: "City assignment ready",
-          title: nextCityMission.title,
-          description: nextCityMission.objective,
-          href: `/city?mission=${nextCityMission.id}`,
-          label: "Enter Training City",
-          reward: `${nextCityMission.xpReward} XP`,
-          icon: Building2,
+          eyebrow: "Continue learning",
+          title: nextLesson?.title ?? "Finish your required lessons",
+          description:
+            nextLesson?.description ??
+            "Complete every knowledge check required for your current role.",
+          href: nextLesson
+            ? `/learn/${nextLesson.slug}`
+            : `/learn?district=${currentRole.slug}`,
+          label: "Open lesson",
+          reward: nextLesson ? `${nextLesson.xpReward} XP` : "Required",
+          icon: BookOpen,
         }
-      : {
-          eyebrow: "Review your progress",
-          title: nextRole
-            ? `Prepare for ${nextRole.name}`
-            : "Role path complete",
-          description: nextRole
-            ? "You have completed the available activities for this role. Review your record while the next promotion requirements are prepared."
-            : "You have reached the highest role currently available in the academy.",
-          href: "/profile",
-          label: "View profile",
-          reward: nextRole ? `${xpRemaining} XP remaining` : "Top clearance",
-          icon: Trophy,
-        };
+      : promotionStatus?.available &&
+          promotionStatus.firstIncompleteStep === "city"
+        ? {
+            eyebrow: "City defense ready",
+            title: requiredCityMission?.title ?? "Required city mission",
+            description:
+              requiredCityMission?.objective ??
+              "Apply the controls, block the attack, and complete the after-action review.",
+            href: "/city",
+            label: "Enter Training City",
+            reward: requiredCityMission
+              ? `${requiredCityMission.xpReward} XP`
+              : "Required",
+            icon: Building2,
+          }
+        : promotionStatus?.available &&
+            promotionStatus.firstIncompleteStep === "capstone" &&
+            promotionStatus.definition
+          ? {
+              eyebrow: "Promotion capstone unlocked",
+              title: "Orientation Center Security Review",
+              description:
+                "Review the evidence, choose the correct remediation, validate the result, and close your first workplace ticket.",
+              href: `/tickets/${promotionStatus.definition.ticketCode}`,
+              label: "Work capstone",
+              reward: `${promotionStatus.definition.xpReward} XP`,
+              icon: ClipboardCheck,
+            }
+          : nextLesson
+            ? {
+                eyebrow: "Continue learning",
+                title: nextLesson.title,
+                description: nextLesson.description,
+                href: `/learn/${nextLesson.slug}`,
+                label: "Open lesson",
+                reward: `${nextLesson.xpReward} XP`,
+                icon: BookOpen,
+              }
+            : nextCityMission
+              ? {
+                  eyebrow: "City assignment ready",
+                  title: nextCityMission.title,
+                  description: nextCityMission.objective,
+                  href: `/city?mission=${nextCityMission.id}`,
+                  label: "Enter Training City",
+                  reward: `${nextCityMission.xpReward} XP`,
+                  icon: Building2,
+                }
+              : {
+                  eyebrow: "Review your progress",
+                  title: nextRole
+                    ? `Prepare for ${nextRole.name}`
+                    : "Role path complete",
+                  description: nextRole
+                    ? "You have completed the available activities for this role. Review your record while the next promotion requirements are prepared."
+                    : "You have reached the highest role currently available in the academy.",
+                  href: "/profile",
+                  label: "View profile",
+                  reward: nextRole
+                    ? `${xpRemaining} XP remaining`
+                    : "Top clearance",
+                  icon: Trophy,
+                };
   const RecommendedIcon = recommendedAction.icon;
   const operativeName = user.name ?? user.email.split("@")[0];
 
@@ -276,8 +336,11 @@ export default async function DashboardPage() {
         />
         <StatCard
           label="Assignments"
-          value={user.submissions.length.toString()}
-          detail="Mission reports submitted"
+          value={(
+            user.submissions.length +
+            (promotionStatus?.capstone.attemptCount ?? 0)
+          ).toString()}
+          detail="Reports and tickets submitted"
           icon={ClipboardCheck}
         />
       </section>
@@ -293,9 +356,11 @@ export default async function DashboardPage() {
                   : "Highest current clearance"}
               </h2>
               <p className="mt-2 text-sm text-zinc-500">
-                {nextRole
-                  ? `${user.points} of ${nextRole.xpRequired} XP earned`
-                  : "More specialist roles will be added as the academy expands."}
+                {promotionStatus?.available
+                  ? `${promotionStatus.completedRequirements} of ${promotionStatus.totalRequirements} promotion requirements complete`
+                  : nextRole
+                    ? `${user.points} of ${nextRole.xpRequired} XP earned`
+                    : "More specialist roles will be added as the academy expands."}
               </p>
             </div>
             <span className="w-fit rounded-full border border-yellow-400/20 bg-yellow-400/10 px-3 py-1.5 text-xs font-black text-yellow-400">
@@ -309,28 +374,48 @@ export default async function DashboardPage() {
             />
           </div>
           <div className="mt-3 flex items-center justify-between text-xs font-bold text-zinc-600">
-            <span>{currentRole.xpRequired} XP</span>
-            <span>{nextRole ? `${nextRole.xpRequired} XP` : "Complete"}</span>
+            <span>
+              {promotionStatus?.available
+                ? "Start role"
+                : `${currentRole.xpRequired} XP`}
+            </span>
+            <span>
+              {promotionStatus?.available
+                ? `${promotionStatus.totalRequirements} requirements`
+                : nextRole
+                  ? `${nextRole.xpRequired} XP`
+                  : "Complete"}
+            </span>
           </div>
 
           <div className="mt-7 grid gap-3 sm:grid-cols-3">
             <ProgressCheckpoint
               label="Learn"
-              detail={`${currentRoleLessonsComplete} lesson${currentRoleLessonsComplete === 1 ? "" : "s"} complete`}
+              detail={`${promotionStatus?.lessons.completed ?? currentRoleLessonsComplete}/${promotionStatus?.lessons.total ?? roleLessons.length} required lessons`}
               complete={
-                roleLessons.length > 0 &&
-                currentRoleLessonsComplete === roleLessons.length
+                promotionStatus?.lessons.complete ??
+                (roleLessons.length > 0 &&
+                  currentRoleLessonsComplete === roleLessons.length)
               }
             />
             <ProgressCheckpoint
               label="Apply"
-              detail={`${completedCityMissions.length} city mission${completedCityMissions.length === 1 ? "" : "s"} complete`}
-              complete={completedCityMissions.length > 0}
+              detail="Required city defense"
+              complete={
+                promotionStatus?.city.complete ??
+                completedCityMissions.length > 0
+              }
             />
             <ProgressCheckpoint
-              label="Document"
-              detail={`${user.submissions.length} report${user.submissions.length === 1 ? "" : "s"} submitted`}
-              complete={user.submissions.length > 0}
+              label="Prove"
+              detail={
+                promotionStatus?.capstone.complete
+                  ? `${promotionStatus.capstone.bestScore}% capstone passed`
+                  : promotionStatus?.capstone.ready
+                    ? "Capstone ticket ready"
+                    : "Capstone ticket locked"
+              }
+              complete={promotionStatus?.capstone.complete ?? false}
             />
           </div>
         </div>
@@ -397,22 +482,22 @@ export default async function DashboardPage() {
           />
           <JourneyStep
             number="03"
-            title="Review the result"
-            description="Use the debrief and score to understand what worked and why."
-            href="/city"
-            icon={CircleGauge}
+            title="Close the capstone"
+            description="Assess evidence, validate the fix, and document the ticket."
+            href="/tickets"
+            icon={ClipboardCheck}
           />
           <JourneyStep
             number="04"
-            title="Earn role clearance"
-            description="Build XP and a record of completed work toward promotion."
-            href="/profile"
-            icon={Target}
+            title="Unlock the next role"
+            description="Promotion records the achievement and opens the next city district."
+            href="/dashboard"
+            icon={CircleGauge}
           />
         </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-3">
+      <section className="grid gap-4 lg:grid-cols-4">
         <QuickLink
           href="/learn"
           label="Learning Path"
@@ -424,6 +509,12 @@ export default async function DashboardPage() {
           label="Mission Training City"
           description="Protect the town through hands-on security simulations."
           icon={Building2}
+        />
+        <QuickLink
+          href="/tickets"
+          label="Ticket Queue"
+          description="Complete the capstone that proves you can apply and document the work."
+          icon={ClipboardCheck}
         />
         <QuickLink
           href="/profile"

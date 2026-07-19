@@ -13,7 +13,7 @@ export function LogoutButton() {
     >
       <button
         type="submit"
-        className="rounded-md border px-3 py-2 text-sm font-medium hover:bg-muted"
+        className="rounded-xl border border-yellow-500/20 bg-black px-4 py-2.5 text-sm font-black text-zinc-300 transition hover:border-yellow-400/50 hover:text-yellow-400"
       >
         Log out
       </button>

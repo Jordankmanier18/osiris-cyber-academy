@@ -7,6 +7,7 @@ import {
   Building2,
   LayoutDashboard,
   ShieldCheck,
+  TicketCheck,
   UserRound,
   type LucideIcon,
 } from "lucide-react";
@@ -32,6 +33,10 @@ const navigationGroups: Array<{
       { label: "Training City", href: "/city", icon: Building2 },
       { label: "Learning Path", href: "/learn", icon: BookOpen },
     ],
+  },
+  {
+    label: "Prove",
+    items: [{ label: "Ticket Queue", href: "/tickets", icon: TicketCheck }],
   },
   {
     label: "Account",

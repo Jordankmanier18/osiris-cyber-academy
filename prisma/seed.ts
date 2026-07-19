@@ -438,11 +438,24 @@ async function main() {
           "A user saved a document but cannot find it on their computer.",
         evidence:
           "User says the file was created yesterday and may have been saved to Downloads or Documents.",
-        requiredAction:
-          "Explain how you would help the user locate the file.",
+        requiredAction: "Explain how you would help the user locate the file.",
         roleId: cyberCadet.id,
         difficulty: "Beginner",
         xpReward: 15,
+      },
+      {
+        title: "Orientation Center Security Review",
+        ticketCode: "OSR-CC-CAP-001",
+        priority: "High",
+        scenario:
+          "The Payroll App Server allows SSH from the entire internet, accepts password authentication, and does not send access events to the SOC. Administrators only require access from 10.20.30.0/24.",
+        evidence:
+          "NSG source: 0.0.0.0/0\nService: SSH / TCP 22\nAuthentication: Password enabled\nAuthorized administrator network: 10.20.30.0/24\nAccess logging: Disabled",
+        requiredAction:
+          "Assess the risk, choose the correct remediation controls, define how you will validate the fix, and write a concise ticket closure note.",
+        roleId: cyberCadet.id,
+        difficulty: "Capstone",
+        xpReward: 40,
       },
       {
         title: "User Cannot Access Email",
@@ -466,8 +479,7 @@ async function main() {
           "A business application cannot connect to its backend server.",
         evidence:
           "Ping to the server fails by hostname but succeeds by IP address.",
-        requiredAction:
-          "Determine the likely issue and explain the next step.",
+        requiredAction: "Determine the likely issue and explain the next step.",
         roleId: networkSupportTrainee.id,
         difficulty: "Beginner",
         xpReward: 25,
